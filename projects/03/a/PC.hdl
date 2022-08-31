@@ -17,4 +17,12 @@ CHIP PC {
 
     PARTS:
     // Put your code here:
+    Not(in=load,out=nload);
+    And(a=nload,b=inc,out=selinc);
+    Inc16(in=o,out=in2);
+    Mux16(a=in,b=in2,sel=selinc,out=in3);
+    Mux16(a=in3,b=false,sel=reset,out=in4);
+    Or(a=load,b=inc,out=tmp);
+    Or(a=reset,b=tmp,out=change);
+    Register(in=in4, load=change, out=out, out=o);
 }

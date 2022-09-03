@@ -40,4 +40,39 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+    Mux16(a=out, b=instruction, sel=notOPCode, out=inA);
+    ARegister(in=inA, load=loadA, out=outA, out[0..14]=addressM);
+    DRegister(in=out, load=loadD, out=outD);
+    And(a=instruction[15], b=instruction[12], out=aORm); // aORm = opcode & aorm
+    Mux16(a=outA, b=inM, sel=aORm, out=am);
+    ALU(x=outD, y=am, zx=zx, nx=nx, zy=zy, ny=ny, f=f, no=no, out=out, out=outM, zr=zr, ng=ng);
+    PC(in=outA, load=loadPC, inc=true, reset=reset, out[0..14]=pc);
+    Not(in=instruction[15], out=notOPCode);
+    And(a=instruction[15], b=instruction[5], out=opcodeAndD0); // opcode & d0
+    Or(a=opcodeAndD0, b=notOPCode, out=loadA); // loadA = (d0 & opcode) or !opcode
+    And(a=instruction[15], b=instruction[4], out=loadD);  // loadD = opcode & d1
+    And(a=instruction[15], b=instruction[11], out=zx);
+    And(a=instruction[15], b=instruction[10], out=nx);
+    And(a=instruction[15], b=instruction[9], out=zy);
+    And(a=instruction[15], b=instruction[8], out=ny);
+    And(a=instruction[15], b=instruction[7], out=f);
+    And(a=instruction[15], b=instruction[6], out=no);
+    // po = !zr & !ng
+    Not(in=zr, out=notZR);
+    Not(in=ng, out=notNG);
+    And(a=notZR,b=notNG, out=po);
+    // loadPC = 
+    And(a=instruction[15], b=instruction[2], out=jmp1);
+    And(a=instruction[15], b=instruction[1], out=jmp2);
+    And(a=instruction[15], b=instruction[0], out=jmp3);
+    And(a=jmp1, b=ng, out=j1);
+    And(a=jmp2, b=zr, out=j2);
+    And(a=jmp3, b=po, out=j3);
+    And(a=jmp1, b=jmp2, out=tmp);
+    And(a=tmp, b=jmp3, out=j4);
+    Or(a=j1,b=j2,out=tmp1);
+    Or(a=tmp1,b=j3, out=tmp2);
+    Or(a=tmp2, b=j4, out=loadPC);
+    // writeM
+    And(a=instruction[15], b=instruction[3], out=writeM);
 }

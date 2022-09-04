@@ -206,9 +206,37 @@ mod tests {
     #[test]
     fn label() {
         let mut translator = LineTranslator::new();
-        let preprocessed = translator.preprocess_line(" ( LABEL ) ").unwrap();
+        let preprocessed = translator.preprocess_line("   (  LABEL    )  ");
+        assert_eq!(preprocessed, None);
+        assert_eq!(translator.line_number, 0);
+        let compiled = translator.compile_line("@LABEL");
+        assert_eq!(compiled, "0000000000000000");
+        translator.preprocess_line("0");
+        translator.compile_line("0");
+        let preprocessed = translator.preprocess_line("   (  L    )  ");
+        assert_eq!(preprocessed, None);
         assert_eq!(translator.line_number, 1);
-        let compiled = translator.compile_line(&preprocessed);
-        assert_eq!(compiled, compare);
+        let compiled = translator.compile_line("@L");
+        assert_eq!(compiled, "0000000000000001");
+    }
+
+    #[test]
+    fn empty() {
+        let mut translator = LineTranslator::new();
+        let preprocessed = translator.preprocess_line("  // Wow!  ");
+        assert_eq!(preprocessed, None);
+        assert_eq!(translator.line_number, 0);
+        let preprocessed = translator.preprocess_line("  ");
+        assert_eq!(preprocessed, None);
+        assert_eq!(translator.line_number, 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid() {
+        let mut translator = LineTranslator::new();
+        let line = "#asdfjk*()O";
+        let line = translator.preprocess_line(line);
+        let _compiled = translator.compile_line(&line.unwrap());
     }
 }

@@ -46,13 +46,13 @@ impl LineTranslator {
         }
     }
 
-    pub fn preprocess_line(&mut self, line: &str) -> Option<String> {
-        let mut line = line.trim();
+    pub fn preprocess_line(&mut self, mut line: &str) -> Option<String> {
         let comment_pos = line.find("//");
         if let Some(comment_pos) = comment_pos {
             line = &line[..comment_pos]
         }
-        if line.len() == 0 || line.starts_with("//") {
+        line = line.trim();
+        if line.len() == 0 {
             None
         } else if line.starts_with("(") {
             let label = line.trim_matches(|c| c == '(' || c == ')');

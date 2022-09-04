@@ -55,11 +55,17 @@ impl LineTranslator {
             self.map.insert(label.trim().to_string(), self.line_number);
             None
         } else {
-            let mut line = line.to_string();
+            let comment_pos = line.find("//");
+            let mut nline;
+            if let Some(comment_pos) = comment_pos {
+                nline = line[..comment_pos].to_string();
+            } else {
+                nline = line.to_string();
+            }
             // remove whitespace
-            line.retain(|c| !char::is_whitespace(c));
+            nline.retain(|c| !char::is_whitespace(c));
             self.line_number += 1;
-            Some(line)
+            Some(nline)
         }
     }
 

@@ -51,6 +51,7 @@ pub enum Command {
     // Return,
 }
 
+#[derive(Debug)]
 pub enum ParseCommandError {
     InvalidCommandName(String),
     NotEnoughArguments,
@@ -58,6 +59,25 @@ pub enum ParseCommandError {
     InvalidArgument(String),
     NoCommand,
     ParseSegmentError(String),
+}
+
+impl ParseCommandError {
+    pub fn get_message(&self, line_number: u32) -> String {
+        match self {
+            Self::InvalidArgument(arg) => {
+                format!("Invalid argument \"{arg}\" on line {line_number}.")
+            }
+            Self::NotEnoughArguments => format!("Not enough arguments on line {line_number}."),
+            Self::TooManyArguments => format!("Too many arguments on line {line_number}"),
+            Self::NoCommand => format!("No command on line {line_number}"),
+            Self::ParseSegmentError(segment) => {
+                format!("Failed to parse segment \"{segment}\" on line {line_number}")
+            }
+            Self::InvalidCommandName(command) => {
+                format!("Invalid command \"{command}\" on line {line_number}")
+            }
+        }
+    }
 }
 
 impl FromStr for Command {

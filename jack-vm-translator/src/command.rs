@@ -1,7 +1,9 @@
 use std::str::FromStr;
 
+use crate::translation_state::TranslationState;
+
 #[derive(Debug)]
-enum Segment {
+pub enum Segment {
     Static,
     Local,
     Argument,
@@ -29,7 +31,7 @@ impl FromStr for Segment {
 }
 
 #[derive(Debug)]
-enum Command {
+pub enum Command {
     Add,
     Sub,
     Neg,
@@ -49,7 +51,7 @@ enum Command {
     // Return,
 }
 
-enum ParseCommandError {
+pub enum ParseCommandError {
     InvalidCommandName(String),
     NotEnoughArguments,
     TooManyArguments,
@@ -103,10 +105,9 @@ impl FromStr for Command {
 }
 
 impl Command {
-    fn parse_push_pop_args<'a, I>(mut it: I) -> Result<(Segment, u16), ParseCommandError>
-    where
-        I: Iterator<Item = &'a str>,
-    {
+    fn parse_push_pop_args<'a>(
+        mut it: impl Iterator<Item = &'a str>,
+    ) -> Result<(Segment, u16), ParseCommandError> {
         let segment = it
             .next()
             .ok_or(ParseCommandError::NotEnoughArguments)
@@ -124,5 +125,140 @@ impl Command {
         } else {
             Ok((segment, index))
         };
+    }
+
+    fn to_asm(self, state: &mut TranslationState) -> String {
+        match self {
+            Self::Add => r"// add
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // *(sp-1) += D
+M=M+D"
+                .to_owned(),
+            Self::Sub => r"// sub
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // *(sp-1) = *(sp-1) - D
+M=M-D"
+                .to_owned(),
+            Self::Neg => r"// neg
+@SP
+A=M-1 // *(sp-1) = -*(sp-1)
+M=-M"
+                .to_owned(),
+            Self::Eq => {
+                let cnt = state.advance_comparison_counter();
+                format!(
+                    r"// eq
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // D = *(sp-1) - D
+D=M-D
+@CMPR.TRUE.{cnt}
+D;JEQ
+@0
+D=A
+@SP
+A=M-1 // *(sp-1) = 0
+M=D
+@CMPR.END.{cnt}
+0;JMP
+(CMPR.TRUE.{cnt})
+@65535
+D=A
+@SP
+A=M-1 // *(sp-1) = 0xffff
+M=D
+(CMPR.END.{cnt})
+"
+                )
+            }
+            Self::Lt => {
+                let cnt = state.advance_comparison_counter();
+                format!(
+                    r"// eq
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // D = *(sp-1) - D
+D=M-D
+@CMPR.TRUE.{cnt}
+D;JLT
+@0
+D=A
+@SP
+A=M-1 // *(sp-1) = 0
+M=D
+@CMPR.END.{cnt}
+0;JMP
+(CMPR.TRUE.{cnt})
+@65535
+D=A
+@SP
+A=M-1 // *(sp-1) = 0xffff
+M=D
+(EQ.END.{cnt})
+"
+                )
+            }
+            Self::Gt => {
+                let cnt = state.advance_comparison_counter();
+                format!(
+                    r"// eq
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // D = *(sp-1) - D
+D=M-D
+@CMPR.TRUE.{cnt}
+D;JGT
+@0
+D=A
+@SP
+A=M-1 // *(sp-1) = 0
+M=D
+@CMPR.END.{cnt}
+0;JMP
+(CMPR.TRUE.{cnt})
+@65535
+D=A
+@SP
+A=M-1 // *(sp-1) = 0xffff
+M=D
+(EQ.END.{cnt})
+"
+                )
+            }
+            Self::And => r"// and
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // *(sp-1) = *(sp-1) & D
+M=M&D"
+                .to_owned(),
+            Self::Or => r"// or
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+A=A-1 // *(sp-1) = *(sp-1) | D
+M=M&D"
+                .to_owned(),
+            Self::Not => r"// not
+@SP
+A=M-1 // *(sp-1) = !*(sp-1)
+M=!M"
+                .to_owned(),
+            _ => todo!(),
+        }
     }
 }

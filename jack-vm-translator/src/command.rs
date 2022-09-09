@@ -147,7 +147,7 @@ impl Command {
         };
     }
 
-    fn to_asm(self, state: &mut TranslationState) -> String {
+    pub fn to_asm(self, state: &mut TranslationState) -> String {
         match self {
             Self::Add => r"// add
 @SP

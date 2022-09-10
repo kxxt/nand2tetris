@@ -283,6 +283,26 @@ D=M
 M=D"
             )),
             Self::Pop {
+                segment: Segment::Temp,
+                i,
+            } => {
+                if i >= 8 {
+                    return Err(TranslationError {
+                        message: "Temp segment overflow!".to_string(),
+                    });
+                }
+                let loc = i + 5;
+                Ok(format!(
+                    r"// pop temp {i}
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+@{loc}
+M=D"
+                ))
+            }
+            Self::Pop {
                 segment: Segment::Constant,
                 i,
             } => Err(TranslationError {
@@ -334,10 +354,31 @@ M=D
 @SP
 M=M+1"
             )),
+            Self::Push {
+                segment: Segment::Temp,
+                i,
+            } => {
+                if i >= 8 {
+                    return Err(TranslationError {
+                        message: "Temp segment overflow!".to_string(),
+                    });
+                }
+                let loc = i + 5;
+                Ok(format!(
+                    r"// push temp i
+@{loc}
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1"
+                ))
+            }
             Self::Push { segment, i } => {
                 let symbol = SEGMENT2SYMBOL.get(&segment).unwrap();
                 Ok(format!(
-                r"// push {segment:?} i
+                    r"// push {segment:?} i
 // D = *(segment + i)
 @{symbol}
 D=M
@@ -349,7 +390,8 @@ A=M
 M=D
 @SP
 M=M+1"
-            ))},
+                ))
+            }
         }
     }
 }

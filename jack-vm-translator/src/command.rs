@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use super::errors::ParseCommandError;
 use crate::translation_state::TranslationState;
 
 #[derive(Debug)]
@@ -51,42 +52,17 @@ pub enum Command {
     // Return,
 }
 
-#[derive(Debug)]
-pub enum ParseCommandError {
-    InvalidCommandName(String),
-    NotEnoughArguments,
-    TooManyArguments,
-    InvalidArgument(String),
-    NoCommand,
-    ParseSegmentError(String),
-}
-
-impl ParseCommandError {
-    pub fn get_message(&self, line_number: u32) -> String {
-        match self {
-            Self::InvalidArgument(arg) => {
-                format!("Invalid argument \"{arg}\" on line {line_number}.")
-            }
-            Self::NotEnoughArguments => format!("Not enough arguments on line {line_number}."),
-            Self::TooManyArguments => format!("Too many arguments on line {line_number}"),
-            Self::NoCommand => format!("No command on line {line_number}"),
-            Self::ParseSegmentError(segment) => {
-                format!("Failed to parse segment \"{segment}\" on line {line_number}")
-            }
-            Self::InvalidCommandName(command) => {
-                format!("Invalid command \"{command}\" on line {line_number}")
-            }
-        }
-    }
-}
-
 impl FromStr for Command {
     type Err = ParseCommandError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        let comment_pos = s.find("//");
+        if let Some(comment_pos) = comment_pos {
+            s = &s[..comment_pos]
+        }
+        s = s.trim();
         let mut components = s.split_whitespace();
         let command_name = components.next().ok_or(ParseCommandError::NoCommand)?;
-
         if let Some(no_arg_cmd) = match command_name {
             "add" => Some(Self::Add),
             "sub" => Some(Self::Sub),
@@ -106,14 +82,18 @@ impl FromStr for Command {
             };
         } else {
             if command_name == "pop" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Pop {
-                    segment: segment,
-                    i: index,
+                return Self::parse_push_pop_args(components).map(|(segment, index)| {
+                    Self::Pop {
+                        segment: segment,
+                        i: index,
+                    }
                 });
             } else if command_name == "push" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Push {
-                    segment: segment,
-                    i: index,
+                return Self::parse_push_pop_args(components).map(|(segment, index)| {
+                    Self::Push {
+                        segment: segment,
+                        i: index,
+                    }
                 });
             } else {
                 return Err(ParseCommandError::InvalidCommandName(

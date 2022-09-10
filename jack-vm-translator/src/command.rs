@@ -1,9 +1,11 @@
-use std::str::FromStr;
+use lazy_static::lazy_static;
+use phf::phf_map;
+use std::{collections::HashMap, str::FromStr};
 
 use super::errors::ParseCommandError;
-use crate::translation_state::TranslationState;
+use crate::{errors::TranslationError, translation_state::TranslationState};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Segment {
     Static,
     Local,
@@ -11,25 +13,31 @@ pub enum Segment {
     This,
     That,
     Temp,
+    Constant,
 }
+
+static FROMSTR_MAP: phf::Map<&'static str, Segment> = phf_map! {
+    "static" => Segment::Static,
+    "local" => Segment::Local,
+    "argument" => Segment::Argument,
+    "this" => Segment::This,
+    "that" => Segment::That,
+    "temp" => Segment::Temp,
+    "constant" => Segment::Constant,
+};
 
 impl FromStr for Segment {
     type Err = ParseCommandError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "static" => Ok(Self::Static),
-            "local" => Ok(Self::Local),
-            "argument" => Ok(Self::Argument),
-            "this" => Ok(Self::This),
-            "that" => Ok(Self::That),
-            "temp" => Ok(Self::Temp),
-            _ => Err(ParseCommandError::ParseSegmentError(format!(
-                "Invalid segment {s}!"
-            ))),
-        }
+        FROMSTR_MAP
+            .get(s)
+            .map(|x| *x)
+            .ok_or(ParseCommandError::ParseSegmentError(s.to_owned()))
     }
 }
+
+impl Segment {}
 
 #[derive(Debug)]
 pub enum Command {
@@ -82,18 +90,14 @@ impl FromStr for Command {
             };
         } else {
             if command_name == "pop" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| {
-                    Self::Pop {
-                        segment: segment,
-                        i: index,
-                    }
+                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Pop {
+                    segment: segment,
+                    i: index,
                 });
             } else if command_name == "push" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| {
-                    Self::Push {
-                        segment: segment,
-                        i: index,
-                    }
+                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Push {
+                    segment: segment,
+                    i: index,
                 });
             } else {
                 return Err(ParseCommandError::InvalidCommandName(
@@ -127,32 +131,40 @@ impl Command {
         };
     }
 
-    pub fn to_asm(self, state: &mut TranslationState) -> String {
+    pub fn to_asm(self, state: &mut TranslationState) -> Result<String, TranslationError> {
+        lazy_static! {
+            static ref SEGMENT2SYMBOL: HashMap<Segment, &'static str> = HashMap::from([
+                (Segment::Local, "LCL"),
+                (Segment::Argument, "ARG"),
+                (Segment::This, "THIS"),
+                (Segment::That, "THAT")
+            ]);
+        }
         match self {
-            Self::Add => r"// add
+            Self::Add => Ok(r"// add
 @SP
 M=M-1 // --sp
 A=M   // D = *sp
 D=M
 A=A-1 // *(sp-1) += D
 M=M+D"
-                .to_owned(),
-            Self::Sub => r"// sub
+                .to_owned()),
+            Self::Sub => Ok(r"// sub
 @SP
 M=M-1 // --sp
 A=M   // D = *sp
 D=M
 A=A-1 // *(sp-1) = *(sp-1) - D
 M=M-D"
-                .to_owned(),
-            Self::Neg => r"// neg
+                .to_owned()),
+            Self::Neg => Ok(r"// neg
 @SP
 A=M-1 // *(sp-1) = -*(sp-1)
 M=-M"
-                .to_owned(),
+                .to_owned()),
             Self::Eq => {
                 let cnt = state.advance_comparison_counter();
-                format!(
+                Ok(format!(
                     r"// eq
 @SP
 M=M-1 // --sp
@@ -177,11 +189,11 @@ A=M-1 // *(sp-1) = 0xffff
 M=D
 (CMPR.END.{cnt})
 "
-                )
+                ))
             }
             Self::Lt => {
                 let cnt = state.advance_comparison_counter();
-                format!(
+                Ok(format!(
                     r"// eq
 @SP
 M=M-1 // --sp
@@ -206,11 +218,11 @@ A=M-1 // *(sp-1) = 0xffff
 M=D
 (EQ.END.{cnt})
 "
-                )
+                ))
             }
             Self::Gt => {
                 let cnt = state.advance_comparison_counter();
-                format!(
+                Ok(format!(
                     r"// eq
 @SP
 M=M-1 // --sp
@@ -235,30 +247,109 @@ A=M-1 // *(sp-1) = 0xffff
 M=D
 (EQ.END.{cnt})
 "
-                )
+                ))
             }
-            Self::And => r"// and
+            Self::And => Ok(r"// and
 @SP
 M=M-1 // --sp
 A=M   // D = *sp
 D=M
 A=A-1 // *(sp-1) = *(sp-1) & D
 M=M&D"
-                .to_owned(),
-            Self::Or => r"// or
+                .to_owned()),
+            Self::Or => Ok(r"// or
 @SP
 M=M-1 // --sp
 A=M   // D = *sp
 D=M
 A=A-1 // *(sp-1) = *(sp-1) | D
 M=M&D"
-                .to_owned(),
-            Self::Not => r"// not
+                .to_owned()),
+            Self::Not => Ok(r"// not
 @SP
 A=M-1 // *(sp-1) = !*(sp-1)
 M=!M"
-                .to_owned(),
-            _ => todo!(),
+                .to_owned()),
+            Self::Pop {
+                segment: Segment::Static,
+                i,
+            } => Ok(format!(
+                r"// pop static {i}
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+@STATIC.{i}
+M=D"
+            )),
+            Self::Pop {
+                segment: Segment::Constant,
+                i,
+            } => Err(TranslationError {
+                message: format!("Illegal operation: pop constant {i}"),
+            }),
+            Self::Pop { segment, i } => {
+                let symbol = SEGMENT2SYMBOL.get(&segment).unwrap();
+                Ok(format!(
+                    r"// pop {segment:?} {i}
+// R13 = segment + i
+@{symbol}
+D=M
+@{i}
+D=D+A
+@R13
+M=D
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+@R13
+A=M
+M=D"
+                ))
+            }
+            Self::Push {
+                segment: Segment::Constant,
+                i,
+            } => Ok(format!(
+                r"// push constant i
+@{i}
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1"
+            )),
+            Self::Push {
+                segment: Segment::Static,
+                i,
+            } => Ok(format!(
+                r"// push static i
+@STATIC.{i}
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1"
+            )),
+            Self::Push { segment, i } => {
+                let symbol = SEGMENT2SYMBOL.get(&segment).unwrap();
+                Ok(format!(
+                r"// push {segment:?} i
+// D = *(segment + i)
+@{symbol}
+D=M
+@{i}
+A=D+A
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1"
+            ))},
         }
     }
 }

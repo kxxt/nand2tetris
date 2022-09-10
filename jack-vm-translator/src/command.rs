@@ -232,7 +232,7 @@ M=M-1 // --sp
 A=M   // D = *sp
 D=M
 A=A-1 // *(sp-1) = *(sp-1) | D
-M=M&D"
+M=M|D"
                 .to_owned()),
             Self::Not => Ok(r"// not
 @SP

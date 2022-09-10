@@ -151,10 +151,10 @@ M=D
 @CMPR.END.{cnt}
 0;JMP
 (CMPR.TRUE.{cnt})
-@32767
-D=A
+@0
+D=!A
 @SP
-A=M-1 // *(sp-1) = 0xffff
+A=M-1 // *(sp-1) = -1 (true)
 M=D
 (CMPR.END.{cnt})
 "
@@ -180,10 +180,10 @@ M=D
 @CMPR.END.{cnt}
 0;JMP
 (CMPR.TRUE.{cnt})
-@32767
-D=A
+@0
+D=!A
 @SP
-A=M-1 // *(sp-1) = 0xffff
+A=M-1 // *(sp-1) = -1 (true)
 M=D
 (CMPR.END.{cnt})
 "
@@ -209,10 +209,10 @@ M=D
 @CMPR.END.{cnt}
 0;JMP
 (CMPR.TRUE.{cnt})
-@32767
-D=A
+@0
+D=!A
 @SP
-A=M-1 // *(sp-1) = 0xffff
+A=M-1 // *(sp-1) = -1 (true)
 M=D
 (CMPR.END.{cnt})
 "

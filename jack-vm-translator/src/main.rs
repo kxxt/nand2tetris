@@ -3,6 +3,7 @@ mod errors;
 mod parser;
 mod translation_state;
 mod translator;
+mod segment;
 
 use clap::Parser as CmdlineParser;
 use colored::*;

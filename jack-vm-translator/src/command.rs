@@ -1,43 +1,12 @@
 use lazy_static::lazy_static;
-use phf::phf_map;
+
 use std::{collections::HashMap, str::FromStr};
 
-use super::errors::ParseCommandError;
-use crate::{errors::TranslationError, translation_state::TranslationState};
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum Segment {
-    Static,
-    Local,
-    Argument,
-    This,
-    That,
-    Temp,
-    Constant,
-}
-
-static FROMSTR_MAP: phf::Map<&'static str, Segment> = phf_map! {
-    "static" => Segment::Static,
-    "local" => Segment::Local,
-    "argument" => Segment::Argument,
-    "this" => Segment::This,
-    "that" => Segment::That,
-    "temp" => Segment::Temp,
-    "constant" => Segment::Constant,
+use crate::segment::Segment;
+use crate::{
+    errors::{ParseCommandError, TranslationError},
+    translation_state::TranslationState,
 };
-
-impl FromStr for Segment {
-    type Err = ParseCommandError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        FROMSTR_MAP
-            .get(s)
-            .map(|x| *x)
-            .ok_or(ParseCommandError::ParseSegmentError(s.to_owned()))
-    }
-}
-
-impl Segment {}
 
 #[derive(Debug)]
 pub enum Command {
@@ -303,6 +272,26 @@ M=D"
                 ))
             }
             Self::Pop {
+                segment: Segment::Pointer,
+                i,
+            } => {
+                if i >= 2 {
+                    return Err(TranslationError {
+                        message: "Pointer segment overflow!".to_string(),
+                    });
+                }
+                let loc = if i == 0 { "THIS" } else { "THAT" };
+                Ok(format!(
+                    r"// pop pointer {i}
+@SP
+M=M-1 // --sp
+A=M   // D = *sp
+D=M
+@{loc}
+M=D"
+                ))
+            }
+            Self::Pop {
                 segment: Segment::Constant,
                 i,
             } => Err(TranslationError {
@@ -366,6 +355,27 @@ M=M+1"
                 let loc = i + 5;
                 Ok(format!(
                     r"// push temp i
+@{loc}
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1"
+                ))
+            }
+            Self::Push {
+                segment: Segment::Pointer,
+                i,
+            } => {
+                if i >= 2 {
+                    return Err(TranslationError {
+                        message: "Pointer segment overflow!".to_string(),
+                    });
+                }
+                let loc = if i == 0 { "THIS" } else { "THAT" };
+                Ok(format!(
+                    r"// push pointer i
 @{loc}
 D=M
 @SP

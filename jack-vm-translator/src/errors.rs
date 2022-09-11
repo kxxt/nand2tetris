@@ -1,30 +1,26 @@
-use std::fmt::Debug;
-
-pub trait Error: Debug {
-    fn get_message(&self) -> String;
-}
+use std::error::Error;
+use std::fmt::{self, Debug};
 
 #[derive(Debug)]
 pub struct ParserError {
     pub line_number: u32,
-    pub message: String,
     pub inner_error: ParseCommandError,
 }
 
 impl ParserError {
     pub fn new(err: ParseCommandError, line_number: u32) -> Self {
-        let message = err.get_message(line_number);
         Self {
             line_number,
-            message,
             inner_error: err,
         }
     }
 }
 
-impl Error for ParserError {
-    fn get_message(&self) -> String {
-        self.inner_error.get_message(self.line_number)
+impl Error for ParserError {}
+impl fmt::Display for ParserError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        std::fmt::Display::fmt(&self.inner_error, f)?;
+        write!(f, " on line {}", self.line_number)
     }
 }
 
@@ -33,9 +29,10 @@ pub struct TranslationError {
     pub message: String,
 }
 
-impl Error for TranslationError {
-    fn get_message(&self) -> String {
-        self.message.to_owned()
+impl Error for TranslationError {}
+impl fmt::Display for TranslationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.message)
     }
 }
 
@@ -49,20 +46,21 @@ pub enum ParseCommandError {
     ParseSegmentError(String),
 }
 
-impl ParseCommandError {
-    pub fn get_message(&self, line_number: u32) -> String {
+impl Error for ParseCommandError {}
+impl fmt::Display for ParseCommandError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::InvalidArgument(arg) => {
-                format!("Invalid argument \"{arg}\" on line {line_number}.")
+                write!(f, "Invalid argument \"{arg}\"")
             }
-            Self::NotEnoughArguments => format!("Not enough arguments on line {line_number}."),
-            Self::TooManyArguments => format!("Too many arguments on line {line_number}"),
-            Self::NoCommand => format!("No command on line {line_number}"),
+            Self::NotEnoughArguments => write!(f, "Not enough arguments"),
+            Self::TooManyArguments => write!(f, "Too many arguments"),
+            Self::NoCommand => write!(f, "No command"),
             Self::ParseSegmentError(segment) => {
-                format!("Failed to parse segment \"{segment}\" on line {line_number}")
+                write!(f, "Failed to parse segment \"{segment}\"")
             }
             Self::InvalidCommandName(command) => {
-                format!("Invalid command \"{command}\" on line {line_number}")
+                write!(f, "Invalid command \"{command}\"")
             }
         }
     }

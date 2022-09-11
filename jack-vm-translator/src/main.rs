@@ -1,15 +1,14 @@
 mod command;
 mod errors;
 mod parser;
+mod segment;
 mod translation_state;
 mod translator;
-mod segment;
 
 use clap::Parser as CmdlineParser;
 use colored::*;
-use std::{fmt::Debug, fs, path::PathBuf, process};
+use std::{error::Error, fmt::Debug, fs, path::PathBuf};
 
-use errors::Error;
 use parser::Parser;
 use translator::Translator;
 
@@ -25,34 +24,14 @@ struct Args {
     output: Option<String>,
 }
 
-fn handle_error<T, E>(result: &Result<T, E>) -> bool
-where
-    E: Error,
-    T: Debug,
-{
-    if result.is_err() {
-        println!(
-            "{}: {}",
-            "Error".bright_red(),
-            result.as_ref().unwrap_err().get_message()
-        );
-        true
-    } else {
-        false
-    }
+fn handle_error(err: &Box<dyn Error>) {
+    println!("{}: {}", "Error".bright_red(), err);
 }
 
-fn main() {
-    let args = Args::parse();
+fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let source = fs::read_to_string(&args.file).expect("Error reading source file!");
-    let result = Parser::parse(&source);
-    if handle_error(&result) {
-        process::exit(111);
-    }
-    let result = Translator::translate(result.unwrap().into_iter());
-    if handle_error(&result) {
-        process::exit(222);
-    }
+    let commands = Parser::parse(&source)?;
+    let asm = Translator::translate(commands.into_iter())?;
     let output_path: PathBuf = if let Some(output_path) = args.output {
         output_path.into()
     } else {
@@ -60,9 +39,13 @@ fn main() {
         p.set_extension("asm");
         p
     };
-    let result = fs::write(output_path, result.unwrap());
-    if result.is_err() {
-        println!("{}: {}", "Error".bright_red(), result.as_ref().unwrap_err());
-        process::exit(333);
+    fs::write(output_path, asm)?;
+    Ok(())
+}
+
+fn main() {
+    let args = Args::parse();
+    if let Err(error) = run(args) {
+        handle_error(&error);
     }
 }

@@ -54,6 +54,13 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     } else {
         vec![PathBuf::from(input)]
     };
+    if files.is_empty() {
+        return Err(format!(
+            "No source code found in directory {}!",
+            input.to_string_lossy()
+        )
+        .into());
+    }
     let sources = files.iter().map(|file| Source {
         content: fs::read_to_string(&file)
             .expect(&format!("Error reading {}!", file.to_string_lossy())),
@@ -73,15 +80,20 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let output_path: PathBuf = if let Some(output_path) = args.output {
         output_path.into()
     } else {
-        if files.len() == 1 {
-            let mut p = PathBuf::from(args.input);
+        if input.is_file() {
+            let mut p = PathBuf::from(input);
             p.set_extension("asm");
             p
         } else {
             input.join(Path::new(input.file_name().unwrap()).with_extension("asm"))
         }
     };
-    fs::write(output_path, asms.join("\n"))?;
+    let bootstrap = if input.is_dir() {
+        Translator::BOOTSTRAP
+    } else {
+        ""
+    };
+    fs::write(output_path, format!("{bootstrap}{}", asms.join("\n")))?;
     Ok(())
 }
 

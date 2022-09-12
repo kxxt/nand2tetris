@@ -24,9 +24,9 @@ pub enum Command {
     Label(String),
     GoTo(String),
     IfGoTo(String),
-    // Function { name: String, nVars: u8 },
-    // Call { name: String, nVars: u8 },
-    // Return,
+    Function { name: String, n_vars: u16 },
+    Call { name: String, n_vars: u16 },
+    Return,
 }
 
 impl FromStr for Command {
@@ -50,6 +50,7 @@ impl FromStr for Command {
             "and" => Some(Self::And),
             "or" => Some(Self::Or),
             "not" => Some(Self::Not),
+            "return" => Some(Self::Return),
             _ => None,
         } {
             return if components.next().is_some() {
@@ -66,6 +67,10 @@ impl FromStr for Command {
             "label" => Self::parse_label_related_args(components).map(Self::Label),
             "goto" => Self::parse_label_related_args(components).map(Self::GoTo),
             "if-goto" => Self::parse_label_related_args(components).map(Self::IfGoTo),
+            "function" => Self::parse_func_related_args(components)
+                .map(|(name, n_vars)| Self::Function { name, n_vars }),
+            "call" => Self::parse_func_related_args(components)
+                .map(|(name, n_vars)| Self::Call { name, n_vars }),
             _ => Err(ParseCommandError::InvalidCommandName(
                 command_name.to_string(),
             )),
@@ -105,6 +110,25 @@ impl Command {
             Err(ParseCommandError::TooManyArguments)
         } else {
             Ok(label.to_owned())
+        };
+    }
+
+    fn parse_func_related_args<'a>(
+        mut it: impl Iterator<Item = &'a str>,
+    ) -> Result<(String, u16), ParseCommandError> {
+        let name = it.next().ok_or(ParseCommandError::NotEnoughArguments)?;
+        let n_vars = it
+            .next()
+            .ok_or(ParseCommandError::NotEnoughArguments)
+            .and_then(|i| {
+                i.parse::<u16>()
+                    .map_err(|err| ParseCommandError::InvalidArgument(err.to_string()))
+            })?;
+        let too_many_args = it.next().is_some();
+        return if too_many_args {
+            Err(ParseCommandError::TooManyArguments)
+        } else {
+            Ok((name.to_string(), n_vars))
         };
     }
 
@@ -411,16 +435,162 @@ M=D
 M=M+1",
                 symbol = SEGMENT2SYMBOL.get(&segment).unwrap()
             )),
-            Self::Label(label) => Ok(format!("({label})")),
-            Self::GoTo(label) => Ok(format!("// goto {label}\n@{label}\n0;JMP")),
-            Self::IfGoTo(label) => Ok(format!(
-                r"// if-goto {label}
+            Self::Label(label) => Ok(if let Some(func) = state.func() {
+                format!("({func}${label})")
+            } else {
+                format!("({label})")
+            }),
+            Self::GoTo(label) => Ok(if let Some(func) = state.func() {
+                format!("// goto {func}${label}\n@{func}${label}\n0;JMP")
+            } else {
+                format!("// goto {label}\n@{label}\n0;JMP")
+            }),
+            Self::IfGoTo(label) => Ok(if let Some(func) = state.func() {
+                format!(
+                    r"// if-goto {func}${label}
+@SP
+M=M-1
+A=M
+D=M
+@{func}${label}
+D;JGT"
+                )
+            } else {
+                format!(
+                    r"// if-goto {label}
 @SP
 M=M-1
 A=M
 D=M
 @{label}
 D;JGT"
+                )
+            }),
+            Self::Function { name, n_vars } => {
+                if !state.enter_func(name) {
+                    return Err(TranslationError {
+                        message: format!("Already in a function \"{}\"", state.func().unwrap()),
+                    });
+                }
+                Ok(format!(
+                    r"// function {func} {n_vars}
+({func})
+@LCL
+A=M{init}
+@SP
+D=M
+@{n_vars}
+D=D+A
+@SP
+M=D",
+                    func = name,
+                    init = "\nM=0\nA=A+1".repeat(*n_vars as usize)
+                ))
+            }
+            Self::Return => Ok(format!(
+                r"// return (from {func})
+// R14(return addr) = LCL - 5
+@LCL
+D=M
+@5
+D=D-A
+@R14
+M=D
+// *ARG = top()
+@SP
+A=M-1
+D=M
+@ARG
+A=M
+M=D
+// SP = ARG + 1
+@ARG
+D=M+1
+@SP
+M=D
+// THAT = *(LCL - 1),...etc
+@LCL
+AM=M-1
+D=M
+@THAT
+M=D
+@LCL
+AM=M-1
+D=M
+@THIS
+M=D
+@LCL
+AM=M-1
+D=M
+@ARG
+M=D
+@LCL
+A=M-1
+D=M
+@LCL
+M=D
+// goto *R14
+@R14
+A=M
+0;JMP",
+                func = state.leave_func().ok_or(TranslationError {
+                    message: format!("Not in a function"),
+                })?
+            )),
+            Self::Call { name, n_vars } => Ok(format!(
+                r"// call {name} {n_vars}
+@{scope}$ret.{i}
+D=A
+@SP
+A=M
+M=D
+// push LCL,...etc
+@LCL
+D=M
+@SP
+AM=M+1
+M=D
+@ARG
+D=M
+@SP
+AM=M+1
+M=D
+@THIS
+D=M
+@SP
+AM=M+1
+M=D
+@THAT
+D=M
+@SP
+AM=M+1
+M=D
+@SP
+M=M+1
+// new ARG
+@SP
+D=M
+@5
+D=D-A
+@{n_vars}
+D=D-A
+@ARG
+M=D
+// LCL = SP
+@SP
+D=M
+@LCL
+M=D
+// goto {name}
+@{name}
+0;JMP
+// (return addr)
+({scope}$ret.{i})
+",
+                i = state.advance_ret_counter(),
+                scope = state.func().ok_or(TranslationError {
+                    message: "Not in a function ".to_string()
+                })?
             )),
         }
     }

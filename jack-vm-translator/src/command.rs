@@ -453,7 +453,7 @@ M=M-1
 A=M
 D=M
 @{func}${label}
-D;JGT"
+D;JNE"
                 )
             } else {
                 format!(

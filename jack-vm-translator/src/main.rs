@@ -70,16 +70,16 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         .iter()
         .map(|parsed| Translator::translate(parsed))
         .collect::<Result<Vec<_>, _>>()?;
-    let output_path: PathBuf = if files.len() == 1 {
-        if let Some(output_path) = args.output {
-            output_path.into()
-        } else {
+    let output_path: PathBuf = if let Some(output_path) = args.output {
+        output_path.into()
+    } else {
+        if files.len() == 1 {
             let mut p = PathBuf::from(args.input);
             p.set_extension("asm");
             p
+        } else {
+            input.join(Path::new(input.file_name().unwrap()).with_extension("asm"))
         }
-    } else {
-        input.join(Path::new(input.file_name().unwrap()).with_extension("asm"))
     };
     fs::write(output_path, asms.join("\n"))?;
     Ok(())

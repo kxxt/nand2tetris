@@ -14,10 +14,19 @@ impl Translator {
             .collect::<Result<Vec<_>, _>>()
             .map(|v| v.join("\n"))
     }
-    pub const BOOTSTRAP: &str = r"// SP = 256
+    pub const BOOTSTRAP: &str = r"// init SP = 256
 @256
 D=A
 @SP
+M=D
+// // init LCL to SP
+// @LCL
+// M=D
+// return address
+@0
+D=A
+@SP
+A=M
 M=D
 // push LCL,...etc
 @LCL

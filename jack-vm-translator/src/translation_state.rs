@@ -1,11 +1,13 @@
 pub struct TranslationState {
     comparison_counter: u16,
+    name: String,
 }
 
 impl TranslationState {
-    pub fn new() -> Self {
+    pub fn new(name: &str) -> Self {
         TranslationState {
             comparison_counter: 0,
+            name: name.to_string(),
         }
     }
 

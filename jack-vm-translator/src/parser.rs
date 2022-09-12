@@ -5,8 +5,8 @@ use crate::errors::{ParseCommandError, ParserError};
 use crate::source::Source;
 
 pub struct ParsedSource {
-    commands: Vec<Command>,
-    name: String,
+    pub commands: Vec<Command>,
+    pub name: String,
 }
 
 pub struct Parser;

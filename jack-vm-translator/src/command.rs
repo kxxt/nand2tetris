@@ -100,7 +100,7 @@ impl Command {
         };
     }
 
-    pub fn to_asm(self, state: &mut TranslationState) -> Result<String, TranslationError> {
+    pub fn to_asm(&self, state: &mut TranslationState) -> Result<String, TranslationError> {
         lazy_static! {
             static ref SEGMENT2SYMBOL: HashMap<Segment, &'static str> = HashMap::from([
                 (Segment::Local, "LCL"),
@@ -255,7 +255,7 @@ M=D"
                 segment: Segment::Temp,
                 i,
             } => {
-                if i >= 8 {
+                if i >= &8 {
                     return Err(TranslationError {
                         message: "Temp segment overflow!".to_string(),
                     });
@@ -275,12 +275,12 @@ M=D"
                 segment: Segment::Pointer,
                 i,
             } => {
-                if i >= 2 {
+                if i >= &2 {
                     return Err(TranslationError {
                         message: "Pointer segment overflow!".to_string(),
                     });
                 }
-                let loc = if i == 0 { "THIS" } else { "THAT" };
+                let loc = if i == &0 { "THIS" } else { "THAT" };
                 Ok(format!(
                     r"// pop pointer {i}
 @SP
@@ -347,7 +347,7 @@ M=M+1"
                 segment: Segment::Temp,
                 i,
             } => {
-                if i >= 8 {
+                if i >= &8 {
                     return Err(TranslationError {
                         message: "Temp segment overflow!".to_string(),
                     });
@@ -368,12 +368,12 @@ M=M+1"
                 segment: Segment::Pointer,
                 i,
             } => {
-                if i >= 2 {
+                if i >= &2 {
                     return Err(TranslationError {
                         message: "Pointer segment overflow!".to_string(),
                     });
                 }
-                let loc = if i == 0 { "THIS" } else { "THAT" };
+                let loc = if i == &0 { "THIS" } else { "THAT" };
                 Ok(format!(
                     r"// push pointer i
 @{loc}

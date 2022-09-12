@@ -5,7 +5,7 @@ use crate::translation_state::TranslationState;
 pub struct Translator;
 
 impl Translator {
-    pub fn translate(commands: impl Iterator<Item = Command>) -> Result<String, TranslationError> {
+    pub fn translate<'a>(commands: impl Iterator<Item = &'a Command>) -> Result<String, TranslationError> {
         let mut state = TranslationState::new();
         commands
             .map(|command| command.to_asm(&mut state))

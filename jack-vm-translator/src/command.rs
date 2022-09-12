@@ -144,16 +144,14 @@ impl Command {
         match self {
             Self::Add => Ok(r"// add
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // *(sp-1) += D
 M=M+D"
                 .to_owned()),
             Self::Sub => Ok(r"// sub
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // *(sp-1) = *(sp-1) - D
 M=M-D"
@@ -168,8 +166,7 @@ M=-M"
                 Ok(format!(
                     r"// eq
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
@@ -198,8 +195,7 @@ M=D
                 Ok(format!(
                     r"// eq
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
@@ -228,8 +224,7 @@ M=D
                 Ok(format!(
                     r"// eq
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
@@ -255,16 +250,14 @@ M=D
             }
             Self::And => Ok(r"// and
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // *(sp-1) = *(sp-1) & D
 M=M&D"
                 .to_owned()),
             Self::Or => Ok(r"// or
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 A=A-1 // *(sp-1) = *(sp-1) | D
 M=M|D"
@@ -280,8 +273,7 @@ M=!M"
             } => Ok(format!(
                 r"// pop static {i}
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 @{}.{i}
 M=D",
@@ -300,8 +292,7 @@ M=D",
                 Ok(format!(
                     r"// pop temp {i}
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 @{loc}
 M=D"
@@ -320,8 +311,7 @@ M=D"
                 Ok(format!(
                     r"// pop pointer {i}
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // D = *(--sp)
 D=M
 @{loc}
 M=D"
@@ -343,8 +333,7 @@ D=D+A
 @R13
 M=D
 @SP
-M=M-1 // --sp
-A=M   // D = *sp
+AM=M-1 // *R13=*(--sp)
 D=M
 @R13
 A=M
@@ -449,8 +438,7 @@ M=M+1",
                 format!(
                     r"// if-goto {func}${label}
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @{func}${label}
 D;JNE"
@@ -459,8 +447,7 @@ D;JNE"
                 format!(
                     r"// if-goto {label}
 @SP
-M=M-1
-A=M
+AM=M-1
 D=M
 @{label}
 D;JGT"
@@ -485,7 +472,7 @@ M=D",
             }
             Self::Return => Ok(format!(
                 r"// return (from {func})
-// R14(return addr) = LCL - 5
+// R14(return addr) = *(LCL - 5)
 @LCL
 D=M
 @5

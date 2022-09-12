@@ -21,9 +21,9 @@ pub enum Command {
     Not,
     Pop { segment: Segment, i: u16 },
     Push { segment: Segment, i: u16 },
-    // Label(u16),
-    // GoTo(u16),
-    // IfGoTo(u16),
+    Label(String),
+    GoTo(String),
+    IfGoTo(String),
     // Function { name: String, nVars: u8 },
     // Call { name: String, nVars: u8 },
     // Return,
@@ -57,22 +57,18 @@ impl FromStr for Command {
             } else {
                 Ok(no_arg_cmd)
             };
-        } else {
-            if command_name == "pop" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Pop {
-                    segment: segment,
-                    i: index,
-                });
-            } else if command_name == "push" {
-                return Self::parse_push_pop_args(components).map(|(segment, index)| Self::Push {
-                    segment: segment,
-                    i: index,
-                });
-            } else {
-                return Err(ParseCommandError::InvalidCommandName(
-                    command_name.to_string(),
-                ));
-            }
+        }
+        match command_name {
+            "pop" => Self::parse_push_pop_args(components)
+                .map(|(segment, index)| Self::Pop { segment, i: index }),
+            "push" => Self::parse_push_pop_args(components)
+                .map(|(segment, index)| Self::Push { segment, i: index }),
+            "label" => Self::parse_label_related_args(components).map(Self::Label),
+            "goto" => Self::parse_label_related_args(components).map(Self::GoTo),
+            "if-goto" => Self::parse_label_related_args(components).map(Self::IfGoTo),
+            _ => Err(ParseCommandError::InvalidCommandName(
+                command_name.to_string(),
+            )),
         }
     }
 }
@@ -97,6 +93,18 @@ impl Command {
             Err(ParseCommandError::TooManyArguments)
         } else {
             Ok((segment, index))
+        };
+    }
+
+    fn parse_label_related_args<'a>(
+        mut it: impl Iterator<Item = &'a str>,
+    ) -> Result<String, ParseCommandError> {
+        let label = it.next().ok_or(ParseCommandError::NotEnoughArguments)?;
+        let too_many_args = it.next().is_some();
+        return if too_many_args {
+            Err(ParseCommandError::TooManyArguments)
+        } else {
+            Ok(label.to_owned())
         };
     }
 
@@ -141,23 +149,24 @@ A=M   // D = *sp
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
-@CMPR.TRUE.{cnt}
+@CMPR.{name}.TRUE.{cnt}
 D;JEQ
 @0
 D=A
 @SP
 A=M-1 // *(sp-1) = 0
 M=D
-@CMPR.END.{cnt}
+@CMPR.{name}.END.{cnt}
 0;JMP
-(CMPR.TRUE.{cnt})
+(CMPR.{name}.TRUE.{cnt})
 @0
 D=!A
 @SP
 A=M-1 // *(sp-1) = -1 (true)
 M=D
-(CMPR.END.{cnt})
-"
+(CMPR.{name}.END.{cnt})
+",
+                    name = state.name()
                 ))
             }
             Self::Lt => {
@@ -170,23 +179,24 @@ A=M   // D = *sp
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
-@CMPR.TRUE.{cnt}
+@CMPR.{name}.TRUE.{cnt}
 D;JLT
 @0
 D=A
 @SP
 A=M-1 // *(sp-1) = 0
 M=D
-@CMPR.END.{cnt}
+@CMPR.{name}.END.{cnt}
 0;JMP
-(CMPR.TRUE.{cnt})
+(CMPR.{name}.TRUE.{cnt})
 @0
 D=!A
 @SP
 A=M-1 // *(sp-1) = -1 (true)
 M=D
-(CMPR.END.{cnt})
-"
+(CMPR.{name}.END.{cnt})
+",
+                    name = state.name()
                 ))
             }
             Self::Gt => {
@@ -199,23 +209,24 @@ A=M   // D = *sp
 D=M
 A=A-1 // D = *(sp-1) - D
 D=M-D
-@CMPR.TRUE.{cnt}
+@CMPR.{name}.TRUE.{cnt}
 D;JGT
 @0
 D=A
 @SP
 A=M-1 // *(sp-1) = 0
 M=D
-@CMPR.END.{cnt}
+@CMPR.{name}.END.{cnt}
 0;JMP
-(CMPR.TRUE.{cnt})
+(CMPR.{name}.TRUE.{cnt})
 @0
 D=!A
 @SP
 A=M-1 // *(sp-1) = -1 (true)
 M=D
-(CMPR.END.{cnt})
-"
+(CMPR.{name}.END.{cnt})
+",
+                    name = state.name()
                 ))
             }
             Self::And => Ok(r"// and
@@ -248,8 +259,9 @@ M=!M"
 M=M-1 // --sp
 A=M   // D = *sp
 D=M
-@STATIC.{i}
-M=D"
+@{}.{i}
+M=D",
+                state.name()
             )),
             Self::Pop {
                 segment: Segment::Temp,
@@ -297,10 +309,8 @@ M=D"
             } => Err(TranslationError {
                 message: format!("Illegal operation: pop constant {i}"),
             }),
-            Self::Pop { segment, i } => {
-                let symbol = SEGMENT2SYMBOL.get(&segment).unwrap();
-                Ok(format!(
-                    r"// pop {segment:?} {i}
+            Self::Pop { segment, i } => Ok(format!(
+                r"// pop {segment:?} {i}
 // R13 = segment + i
 @{symbol}
 D=M
@@ -314,9 +324,9 @@ A=M   // D = *sp
 D=M
 @R13
 A=M
-M=D"
-                ))
-            }
+M=D",
+                symbol = SEGMENT2SYMBOL.get(&segment).unwrap()
+            )),
             Self::Push {
                 segment: Segment::Constant,
                 i,
@@ -335,13 +345,14 @@ M=M+1"
                 i,
             } => Ok(format!(
                 r"// push static i
-@STATIC.{i}
+@{}.{i}
 D=M
 @SP
 A=M
 M=D
 @SP
-M=M+1"
+M=M+1",
+                state.name()
             )),
             Self::Push {
                 segment: Segment::Temp,
@@ -385,10 +396,8 @@ M=D
 M=M+1"
                 ))
             }
-            Self::Push { segment, i } => {
-                let symbol = SEGMENT2SYMBOL.get(&segment).unwrap();
-                Ok(format!(
-                    r"// push {segment:?} i
+            Self::Push { segment, i } => Ok(format!(
+                r"// push {segment:?} i
 // D = *(segment + i)
 @{symbol}
 D=M
@@ -399,9 +408,20 @@ D=M
 A=M
 M=D
 @SP
-M=M+1"
-                ))
-            }
+M=M+1",
+                symbol = SEGMENT2SYMBOL.get(&segment).unwrap()
+            )),
+            Self::Label(label) => Ok(format!("({label})")),
+            Self::GoTo(label) => Ok(format!("// goto {label}\n@{label}\n0;JMP")),
+            Self::IfGoTo(label) => Ok(format!(
+                r"// if-goto {label}
+@SP
+M=M-1
+A=M
+D=M
+@{label}
+D;JGT"
+            )),
         }
     }
 }

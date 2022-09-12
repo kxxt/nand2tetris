@@ -15,4 +15,8 @@ impl TranslationState {
         self.comparison_counter += 1;
         self.comparison_counter
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }

@@ -489,7 +489,8 @@ M=D",
 @LCL
 D=M
 @5
-D=D-A
+A=D-A
+D=M
 @R14
 M=D
 // *ARG = top()

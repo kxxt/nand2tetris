@@ -467,11 +467,7 @@ D;JGT"
                 )
             }),
             Self::Function { name, n_vars } => {
-                if !state.enter_func(name) {
-                    return Err(TranslationError {
-                        message: format!("Already in a function \"{}\"", state.func().unwrap()),
-                    });
-                }
+                state.enter_func(name);
                 Ok(format!(
                     r"// function {func} {n_vars}
 ({func})
@@ -533,7 +529,7 @@ M=D
 @R14
 A=M
 0;JMP",
-                func = state.leave_func().ok_or(TranslationError {
+                func = state.func().ok_or(TranslationError {
                     message: format!("Not in a function"),
                 })?
             )),

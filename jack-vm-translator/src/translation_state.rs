@@ -2,7 +2,7 @@ pub struct TranslationState {
     comparison_counter: u16,
     name: String,
     function: Option<String>,
-    ret_counter: u16
+    ret_counter: u16,
 }
 
 impl TranslationState {
@@ -29,16 +29,8 @@ impl TranslationState {
         &self.name
     }
 
-    pub fn leave_func(&mut self) -> Option<String> {
-        self.function.take()
-    }
-
-    pub fn enter_func(&mut self, function: &str) -> bool {
-        if self.function == None {
-            self.function = Some(function.to_string());
-            return true;
-        }
-        false
+    pub fn enter_func(&mut self, function: &str) {
+        self.function = Some(function.to_string());
     }
 
     pub fn func(&self) -> Option<&String> {

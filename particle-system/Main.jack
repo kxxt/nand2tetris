@@ -1,0 +1,10 @@
+/** Entrypoint of particle system demonstration. */
+class Main {
+    function void main() {
+        var ParticleSystem game;
+        let game = ParticleSystem.new();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

@@ -1,0 +1,45 @@
+class Particle {
+    field int px, py, vx, vy;
+    constructor Particle new(int Apx, int Apy, int Avx, int Avy) {
+        let px = Apx;
+        let py = Apy;
+        let vx = Avx;
+        let vy = Avy;
+        return this;
+    }
+
+    method void draw(){
+        do Screen.setColor(true);
+        do Screen.drawCircle(px, py, 3);
+        return;
+    }
+
+    method void erase(){
+        do Screen.setColor(false);
+        do Screen.drawCircle(px, py, 3);
+        return;
+    }
+    method void update() {
+        do erase();
+        let px = px + vx;
+        let py = py + vy;
+        if (px < 3) {
+            let px = 6-px;
+            let vx = -vx;
+        }
+        if (py < 3) {
+            let py = 6-py;
+            let vy = -vy;
+        }
+        if (px > 508) {
+            let px = 1016 - px;
+            let vx = -vx;
+        }
+        if (py > 252) {
+            let py = 504 - py;
+            let vy = -vy;
+        }
+        do draw();
+        return;
+    }
+}

@@ -10,34 +10,30 @@ pub struct Source {
     pub name: String,
 }
 
-pub struct Tokenizer<'a> {
-    source: String,
-    module_name: String,
-    iterator: Cow<'a, str>,
-}
+pub struct Tokenizer;
 
-impl<'a> Tokenizer<'a> {
-    pub fn new(source: Source) -> Self {
+impl Tokenizer {
+    pub fn stream<'a>(source: &'a Source) -> TokenStream<'a> {
         lazy_static! {
             static ref REMOVE_COMMENTS: Regex = Regex::new(r#"\/\*(.|\n)*?\*\/|\/\/.*"#).unwrap();
         }
         let Source {
             content: source,
-            name: module_name,
+            name,
         } = source;
-        Tokenizer {
-            source,
-            module_name,
-            iterator: REMOVE_COMMENTS.replace_all(&source, ""),
+        TokenStream {
+            source: REMOVE_COMMENTS.replace_all(&source, ""),
+            source_name: &name,
         }
-    }
-
-    fn source_name(&self) -> &str {
-        return &self.module_name;
     }
 }
 
-impl<'a> Iterator for Tokenizer<'a> {
+pub struct TokenStream<'a> {
+    source: Cow<'a, str>,
+    source_name: &'a str,
+}
+
+impl<'a> Iterator for TokenStream<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -135,8 +131,10 @@ class ParticleSystem {
 }"##
             .to_string(),
         };
-        let tokenizer = Tokenizer::new(source);
-        assert_eq!(tokenizer.iterator.to_string(), r##"
+        let stream = Tokenizer::stream(&source);
+        assert_eq!(
+            stream.source.to_string(),
+            r##"
 
 class ParticleSystem {
     field int count;
@@ -215,6 +213,7 @@ class ParticleSystem {
         do Memory.deAlloc(this);
         return;
     }
-}"##);
+}"##
+        );
     }
 }

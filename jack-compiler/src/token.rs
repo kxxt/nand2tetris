@@ -20,6 +20,18 @@ impl Token {
     }
 }
 
+impl<'a> PartialEq<TokenRef<'a>> for Token {
+    fn eq(&self, other: &TokenRef<'a>) -> bool {
+        &self.kind == other.kind && self.value == other.value
+    }
+}
+
+impl<'a> Display for TokenRef<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} \"{}\"", self.kind, self.value)
+    }
+}
+
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} \"{}\"", self.kind, self.value)

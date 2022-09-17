@@ -1,7 +1,7 @@
 import re
 import sys
 
-lines = sys.stdin.readlines()[1:-2]
+lines = sys.stdin.readlines()[1:-1]
 
 regex = re.compile(r'<(\w+)>([^<]+)</\w+>')
 

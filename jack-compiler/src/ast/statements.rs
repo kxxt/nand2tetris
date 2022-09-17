@@ -12,9 +12,9 @@ pub enum StatementNode {
 
 #[derive(Debug)]
 pub struct IfElseNode {
-    condition: ExpressionNode,
-    statements: Vec<StatementNode>,
-    else_node: Option<Vec<StatementNode>>,
+    pub(crate) condition: ExpressionNode,
+    pub(crate) statements: Vec<StatementNode>,
+    pub(crate) else_node: Option<Vec<StatementNode>>,
 }
 
 #[derive(Debug)]

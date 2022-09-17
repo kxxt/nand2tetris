@@ -6,6 +6,7 @@ mod token;
 mod emitter;
 mod tokenizer;
 mod compiler;
+mod errors;
 
 fn main() {
     println!("Hello, world!");

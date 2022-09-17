@@ -1,5 +1,10 @@
 use super::token::{Token, TokenKind};
 
+pub struct Source {
+    pub content: String,
+    pub name: String,
+}
+
 pub struct Tokenizer<'a> {
     src: &'a str,
 }

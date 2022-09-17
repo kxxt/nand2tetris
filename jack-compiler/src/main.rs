@@ -1,7 +1,9 @@
+#![feature(is_some_with)]
 mod ast;
+mod cli;
+mod parser;
 mod token;
 mod tokenizer;
-mod parser;
 
 fn main() {
     println!("Hello, world!");

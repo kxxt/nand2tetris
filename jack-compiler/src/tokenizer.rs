@@ -10,7 +10,7 @@ pub struct Tokenizer {
 }
 
 impl Tokenizer {
-    pub fn new(source: Source) -> Tokenizer {
+    pub fn new(source: Source) -> Self {
         Tokenizer { source }
     }
 }

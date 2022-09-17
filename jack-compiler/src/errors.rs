@@ -1,7 +1,14 @@
 use thiserror::Error;
 
+use crate::token::Token;
+
 #[derive(Error, Debug)]
-pub enum ParserError {}
+pub enum ParserError {
+    #[error("unexpected end of token stream")]
+    UnexpectedEndOfStream,
+    #[error("unexpected token {0:?}, expected {1}")]
+    UnexpectedToken(Token, String),
+}
 
 #[derive(Error, Debug)]
 pub enum TokenizerError {

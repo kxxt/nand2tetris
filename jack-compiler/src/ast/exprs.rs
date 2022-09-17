@@ -1,21 +1,25 @@
 use super::{IdentifierNode, NodeBox, NodeCollection};
 
+#[derive(Debug)]
 pub struct ExpressionNode {
     term: NodeBox<TermNode>,
     next: NodeCollection<ExpressionPart>,
 }
 
+#[derive(Debug)]
 pub struct ExpressionPart {
     operator: BinaryOperator,
     term: NodeBox<TermNode>,
 }
 
+#[derive(Debug)]
 pub struct SubroutineCallNode {
     this: Option<IdentifierNode>,
     name: IdentifierNode,
     parameters: NodeCollection<ExpressionNode>,
 }
 
+#[derive(Debug)]
 pub enum BinaryOperator {
     Plus,
     Minus,
@@ -28,11 +32,13 @@ pub enum BinaryOperator {
     Equal,
 }
 
+#[derive(Debug)]
 pub enum UnaryOperator {
     LogicalNegation,
     ArthemiticNegation,
 }
 
+#[derive(Debug)]
 pub enum KeywordConstant {
     True,
     False,
@@ -40,6 +46,7 @@ pub enum KeywordConstant {
     This,
 }
 
+#[derive(Debug)]
 pub enum TermNode {
     IntegerConstant(u16),
     StringConstant(String),
@@ -51,11 +58,13 @@ pub enum TermNode {
     Parentheses(NodeBox<ExpressionNode>),
 }
 
+#[derive(Debug)]
 pub struct ArrayElementNode {
     name: IdentifierNode,
     index: ExpressionNode,
 }
 
+#[derive(Debug)]
 pub struct UnaryOperationNode {
     operator: UnaryOperator,
     subject: NodeBox<TermNode>,

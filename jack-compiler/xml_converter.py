@@ -18,7 +18,9 @@ print("vec![")
 for line in lines:
     match = regex.match(line)
     tag = match.group(1)
-    value = match.group(2).strip()
+    # DO NOT use strip here.
+    # The provided xml is whitespace sensitive.
+    value = match.group(2)[1:-1]
     value = re.sub('&amp;', '&', value)
     value = re.sub('&lt;', '<', value)
     value = re.sub('&gt;', '>', value)

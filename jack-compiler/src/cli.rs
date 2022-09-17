@@ -1,5 +1,4 @@
 use std::{
-    error::Error,
     fs, io,
     path::{Path, PathBuf},
 };

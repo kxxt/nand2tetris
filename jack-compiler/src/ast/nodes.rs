@@ -2,10 +2,6 @@ use super::kinds::*;
 use super::statements::*;
 use super::NodeCollection;
 
-pub enum ASTNode {
-    Class(ClassNode),
-}
-
 pub struct IdentifierNode(String);
 
 pub struct ClassNode {

@@ -11,3 +11,6 @@ pub use statements::*;
 
 type NodeCollection<T> = Vec<T>;
 type NodeBox<T> = Rc<T>;
+
+/// Each compilation unit is a class
+type AST = ClassNode;

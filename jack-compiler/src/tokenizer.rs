@@ -5,17 +5,17 @@ pub struct Source {
     pub name: String,
 }
 
-pub struct Tokenizer<'a> {
-    src: &'a str,
+pub struct Tokenizer {
+    source: Source,
 }
 
-impl<'a> Tokenizer<'a> {
-    pub fn new(src: &'a str) -> Tokenizer<'a> {
-        Tokenizer { src }
+impl Tokenizer {
+    pub fn new(source: Source) -> Tokenizer {
+        Tokenizer { source }
     }
 }
 
-impl<'a> Iterator for Tokenizer<'a> {
+impl Iterator for Tokenizer {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {

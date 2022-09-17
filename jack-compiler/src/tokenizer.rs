@@ -15,7 +15,7 @@ pub struct Tokenizer;
 impl Tokenizer {
     pub fn stream<'a>(source: &'a Source) -> TokenStream<'a> {
         lazy_static! {
-            static ref REMOVE_COMMENTS: Regex = Regex::new(r#"\/\*(.|\n)*?\*\/|\/\/.*"#).unwrap();
+            static ref REMOVE_COMMENTS: Regex = Regex::new(r#"/\*(.|\n)*?\*/|//.*"#).unwrap();
         }
         let Source {
             content: source,
@@ -31,6 +31,12 @@ impl Tokenizer {
 pub struct TokenStream<'a> {
     source: Cow<'a, str>,
     source_name: &'a str,
+}
+
+impl<'a> TokenStream<'a> {
+    fn source_name(&self) -> &str {
+        &self.source_name
+    }
 }
 
 impl<'a> Iterator for TokenStream<'a> {

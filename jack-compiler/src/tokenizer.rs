@@ -13,6 +13,10 @@ impl Tokenizer {
     pub fn new(source: Source) -> Self {
         Tokenizer { source }
     }
+
+    fn name(&self) -> &str {
+        return &self.source.name;
+    }
 }
 
 impl Iterator for Tokenizer {

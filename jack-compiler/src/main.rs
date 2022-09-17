@@ -4,6 +4,7 @@ mod cli;
 mod parser;
 mod token;
 mod tokenizer;
+mod compiler;
 
 fn main() {
     println!("Hello, world!");

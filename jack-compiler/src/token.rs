@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Token {
-    kind: TokenKind,
-    value: String,
+    pub kind: TokenKind,
+    pub value: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenKind {
     Keyword,
     Symbol,
@@ -12,3 +12,14 @@ pub enum TokenKind {
     IntegerConstant,
     StringConstant,
 }
+
+macro_rules! token {
+    ($kind:ident, $value:expr) => {
+        Token {
+            kind: TokenKind::$kind,
+            value: $value,
+        }
+    };
+}
+
+pub(crate) use token;

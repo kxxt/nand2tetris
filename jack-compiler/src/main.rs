@@ -3,6 +3,7 @@ mod ast;
 mod cli;
 mod parser;
 mod token;
+mod emitter;
 mod tokenizer;
 mod compiler;
 

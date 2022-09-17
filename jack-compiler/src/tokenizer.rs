@@ -156,7 +156,7 @@ pub struct TokenStream<'a> {
 }
 
 impl<'a> TokenStream<'a> {
-    fn source_name(&self) -> &str {
+    pub fn source_name(&self) -> &str {
         &self.source_name
     }
 

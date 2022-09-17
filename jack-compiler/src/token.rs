@@ -1,7 +1,23 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct Token {
     pub kind: TokenKind,
     pub value: String,
+}
+
+pub struct TokenRef<'a> {
+    pub kind: &'a TokenKind,
+    pub value: &'a str,
+}
+
+impl Token {
+    pub fn as_ref<'a>(&'a self) -> TokenRef<'a> {
+        TokenRef {
+            kind: &self.kind,
+            value: &self.value,
+        }
+    }
 }
 
 impl Display for Token {
@@ -39,7 +55,5 @@ macro_rules! token {
         }
     };
 }
-
-use std::fmt::Display;
 
 pub(crate) use token;

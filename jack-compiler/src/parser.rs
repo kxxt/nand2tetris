@@ -1,11 +1,11 @@
 use crate::{ast::AST, tokenizer::Tokenizer};
 
-pub struct Parser {
-    tokenizer: Tokenizer,
+pub struct Parser<'a> {
+    tokenizer: Tokenizer<'a>,
 }
 
-impl Parser {
-    fn new(tokenizer: Tokenizer) -> Self {
+impl<'a> Parser<'a> {
+    fn new(tokenizer: Tokenizer<'a>) -> Self {
         Self { tokenizer }
     }
 

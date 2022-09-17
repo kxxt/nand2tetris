@@ -2,7 +2,7 @@ use super::kinds::*;
 use super::statements::*;
 use super::NodeCollection;
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::From)]
 pub struct IdentifierNode(String);
 #[derive(Debug)]
 
@@ -36,18 +36,18 @@ pub enum TypeNode {
 
 #[derive(Debug)]
 pub struct ParameterNode {
-    r#type: TypeNode,
-    name: IdentifierNode,
+    pub(crate) r#type: TypeNode,
+    pub(crate) name: IdentifierNode,
 }
 
 #[derive(Debug)]
 pub struct VariableDeclarationNode {
-    r#type: TypeNode,
-    names: NodeCollection<IdentifierNode>,
+    pub(crate) r#type: TypeNode,
+    pub(crate) names: NodeCollection<IdentifierNode>,
 }
 
 #[derive(Debug)]
 pub struct SubroutineBody {
-    variables: NodeCollection<VariableDeclarationNode>,
-    statements: NodeCollection<StatementNode>,
+    pub(crate) variables: NodeCollection<VariableDeclarationNode>,
+    pub(crate) statements: NodeCollection<StatementNode>,
 }

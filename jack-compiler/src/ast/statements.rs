@@ -19,23 +19,23 @@ pub struct IfElseNode {
 
 #[derive(Debug)]
 pub struct DoNode {
-    call: SubroutineCallNode,
+    pub(crate) call: SubroutineCallNode,
 }
 
 #[derive(Debug)]
 pub struct LetNode {
-    name: IdentifierNode,
-    index: Option<ExpressionNode>,
-    value: ExpressionNode,
+    pub(crate) name: IdentifierNode,
+    pub(crate) index: Option<ExpressionNode>,
+    pub(crate) value: ExpressionNode,
 }
 
 #[derive(Debug)]
 pub struct WhileNode {
-    condition: ExpressionNode,
-    statements: Vec<StatementNode>,
+    pub(crate) condition: ExpressionNode,
+    pub(crate) statements: Vec<StatementNode>,
 }
 
 #[derive(Debug)]
 pub struct ReturnNode {
-    value: Option<ExpressionNode>,
+    pub(crate) value: Option<ExpressionNode>,
 }

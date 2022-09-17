@@ -2,21 +2,21 @@ use super::{IdentifierNode, NodeBox, NodeCollection};
 
 #[derive(Debug)]
 pub struct ExpressionNode {
-    term: NodeBox<TermNode>,
-    next: NodeCollection<ExpressionPart>,
+    pub(crate) term: NodeBox<TermNode>,
+    pub(crate) next: NodeCollection<ExpressionPart>,
 }
 
 #[derive(Debug)]
 pub struct ExpressionPart {
-    operator: BinaryOperator,
-    term: NodeBox<TermNode>,
+    pub(crate) operator: BinaryOperator,
+    pub(crate) term: NodeBox<TermNode>,
 }
 
 #[derive(Debug)]
 pub struct SubroutineCallNode {
-    this: Option<IdentifierNode>,
-    name: IdentifierNode,
-    parameters: NodeCollection<ExpressionNode>,
+    pub(crate) this: Option<IdentifierNode>,
+    pub(crate) name: IdentifierNode,
+    pub(crate) parameters: NodeCollection<ExpressionNode>,
 }
 
 #[derive(Debug)]
@@ -60,12 +60,12 @@ pub enum TermNode {
 
 #[derive(Debug)]
 pub struct ArrayElementNode {
-    name: IdentifierNode,
-    index: ExpressionNode,
+    pub(crate) name: IdentifierNode,
+    pub(crate) index: ExpressionNode,
 }
 
 #[derive(Debug)]
 pub struct UnaryOperationNode {
-    operator: UnaryOperator,
-    subject: NodeBox<TermNode>,
+    pub(crate) operator: UnaryOperator,
+    pub(crate) subject: NodeBox<TermNode>,
 }

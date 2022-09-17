@@ -17,7 +17,7 @@ macro_rules! token {
     ($kind:ident, $value:expr) => {
         Token {
             kind: TokenKind::$kind,
-            value: $value,
+            value: $value.to_owned(),
         }
     };
 }

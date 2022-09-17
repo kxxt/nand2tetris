@@ -204,7 +204,6 @@ macro_rules! test_tokenizer {
                 name: "Test".to_string(),
                 content: $source.to_string(),
             };
-            let stream = Tokenizer::stream(&source);
             let tokens: Vec<Token> = Tokenizer::stream(&source)
                 .collect::<Result<Vec<Token>, _>>()
                 .unwrap();

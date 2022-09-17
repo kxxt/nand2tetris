@@ -14,7 +14,7 @@ impl Tokenizer {
         Tokenizer { source }
     }
 
-    fn name(&self) -> &str {
+    fn source_name(&self) -> &str {
         return &self.source.name;
     }
 }

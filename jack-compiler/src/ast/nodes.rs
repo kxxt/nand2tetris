@@ -1,4 +1,6 @@
 use super::kinds::*;
+use super::statements::*;
+use super::NodeCollection;
 
 pub enum ASTNode {
     Class(ClassNode),
@@ -8,20 +10,20 @@ pub struct IdentifierNode(String);
 
 pub struct ClassNode {
     class_name: IdentifierNode,
-    class_variable_declarations: Vec<ClassVariableDeclarationNode>,
-    subroutine_declarations: Vec<SubroutineDeclarationNode>,
+    class_variable_declarations: NodeCollection<ClassVariableDeclarationNode>,
+    subroutine_declarations: NodeCollection<SubroutineDeclarationNode>,
 }
 
 pub struct ClassVariableDeclarationNode {
     kind: ClassVariableKind,
-    variables: Vec<VariableDeclarationNode>,
+    variables: NodeCollection<VariableDeclarationNode>,
 }
 
 pub struct SubroutineDeclarationNode {
     kind: SubroutineKind,
     return_type: Option<TypeNode>,
     name: IdentifierNode,
-    parameters: Vec<ParameterNode>,
+    parameters: NodeCollection<ParameterNode>,
 }
 
 pub enum TypeNode {
@@ -38,10 +40,10 @@ pub struct ParameterNode {
 
 pub struct VariableDeclarationNode {
     r#type: TypeNode,
-    names: Vec<IdentifierNode>,
+    names: NodeCollection<IdentifierNode>,
 }
 
 pub struct SubroutineBody {
-    variables: Vec<VariableDeclarationNode>,
-    statements: Vec<StatementNode>
+    variables: NodeCollection<VariableDeclarationNode>,
+    statements: NodeCollection<StatementNode>,
 }

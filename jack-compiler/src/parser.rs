@@ -310,15 +310,38 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_while_statement(&mut self) -> Result<WhileNode> {
-        todo!()
+        // The parse_statements method guarantees this token is "while"
+        self.eat()?;
+        self.eat_symbol("(")?;
+        let condition = self.parse_expression()?;
+        self.eat_symbol(")");
+        self.eat_symbol("{")?;
+        let statements = self.parse_statements()?;
+        self.eat_symbol("}")?;
+        Ok(WhileNode {
+            condition,
+            statements,
+        })
     }
 
     fn parse_do_statement(&mut self) -> Result<DoNode> {
-        todo!()
+        // The parse_statements method guarantees this token is "do"
+        self.eat()?;
+        let call = self.parse_subroutine_call()?;
+        self.eat_symbol(";")?;
+        Ok(DoNode { call })
     }
 
     fn parse_return_statement(&mut self) -> Result<ReturnNode> {
-        todo!()
+        // The parse_statements method guarantees this token is "do"
+        self.eat()?;
+        let value = if self.look_ahead_for_symbol(";")? {
+            None
+        } else {
+            Some(self.parse_expression()?)
+        };
+        self.eat_symbol(";")?;
+        Ok(ReturnNode { value })
     }
 
     fn parse_array_index(&mut self) -> Result<Option<ExpressionNode>> {
@@ -333,6 +356,10 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression(&self) -> Result<ExpressionNode> {
+        todo!()
+    }
+
+    fn parse_subroutine_call(&mut self) -> Result<SubroutineCallNode> {
         todo!()
     }
 }

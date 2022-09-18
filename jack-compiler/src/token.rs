@@ -1,14 +1,14 @@
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Token {
-    pub kind: TokenKind,
-    pub value: String,
+pub(crate) struct Token {
+    pub(crate) kind: TokenKind,
+    pub(crate) value: String,
 }
 
-pub struct TokenRef<'a> {
-    pub kind: &'a TokenKind,
-    pub value: &'a str,
+pub(crate) struct TokenRef<'a> {
+    pub(crate) kind: &'a TokenKind,
+    pub(crate) value: &'a str,
 }
 
 impl Token {
@@ -39,7 +39,7 @@ impl Display for Token {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum TokenKind {
+pub(crate) enum TokenKind {
     Keyword,
     Symbol,
     Identifier,

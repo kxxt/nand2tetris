@@ -119,6 +119,7 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
     pub(super) fn parse_subroutine_call(&mut self) -> Result<SubroutineCallNode> {
         let first = self.eat_identifier()?.into();
         let (this, name) = if self.look_ahead_for_symbol(".")? {
+            self.eat()?;
             (Some(first), self.eat_identifier()?.into())
         } else {
             (None, first)

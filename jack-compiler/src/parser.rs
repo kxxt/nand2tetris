@@ -254,4 +254,42 @@ impl<'a> Parser<'a> {
         self.eat_symbol("}")?;
         todo!()
     }
+    fn parse_statements(&mut self) -> Result<NodeCollection<StatementNode>> {
+        let mut list: Vec<StatementNode> = NodeCollection::new();
+        while let Some(TokenRef {
+            kind: TokenKind::Keyword,
+            value: val @ ("let" | "if" | "while" | "do" | "return"),
+        }) = self.peek()?.map(|t| t.as_ref())
+        {
+            list.push(match val {
+                "let" => self.parse_let_statement()?.into(),
+                "if" => self.parse_if_statement()?.into(),
+                "while" => self.parse_while_statement()?.into(),
+                "do" => self.parse_do_statement()?.into(),
+                "return" => self.parse_return_statement()?.into(),
+                _ => panic!("Unreachable code"),
+            })
+        }
+        Ok(list)
+    }
+
+    fn parse_let_statement(&mut self) -> Result<LetNode> {
+        todo!()
+    }
+
+    fn parse_if_statement(&mut self) -> Result<IfElseNode> {
+        todo!()
+    }
+
+    fn parse_while_statement(&mut self) -> Result<WhileNode> {
+        todo!()
+    }
+
+    fn parse_do_statement(&mut self) -> Result<DoNode> {
+        todo!()
+    }
+
+    fn parse_return_statement(&mut self) -> Result<ReturnNode> {
+        todo!()
+    }
 }

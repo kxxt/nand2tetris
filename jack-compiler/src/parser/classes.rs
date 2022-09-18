@@ -107,13 +107,13 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
 
     pub(super) fn parse_subroutine_declaration(&mut self) -> Result<SubroutineDeclarationNode> {
         // parse (constructor|function|method)
-        let token = self.next_token()?;
         let kind = self
             .look_ahead_for_subroutine_kind()?
             .ok_or(ParserError::UnexpectedToken(
-                token,
+                self.next_token()?,
                 r#""constructor", "function" or "method""#.to_string(),
             ))?;
+        self.eat()?;
         // parse (void|type)
         let return_type = self.parse_type(true)?;
         // parse subroutine name

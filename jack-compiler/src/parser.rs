@@ -366,6 +366,18 @@ impl<'a> Parser<'a> {
         Ok(ExpressionNode { term, parts })
     }
 
+    fn parse_expression_list(&mut self) -> Result<NodeCollection<ExpressionNode>> {
+        let mut list = NodeCollection::new();
+        if self.look_ahead_for_symbol(")")? {
+            return Ok(list);
+        }
+        while self.look_ahead_for_symbol(",")? {
+            self.eat()?;
+            list.push(self.parse_expression()?);
+        }
+        Ok(list)
+    }
+
     fn parse_term(&mut self) -> Result<NodeBox<TermNode>> {
         todo!()
     }
@@ -381,6 +393,19 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_subroutine_call(&mut self) -> Result<SubroutineCallNode> {
-        todo!()
+        let first = self.eat_identifier()?.into();
+        let (this, name) = if self.look_ahead_for_symbol(".")? {
+            (Some(first), self.eat_identifier()?.into())
+        } else {
+            (None, first)
+        };
+        self.eat_symbol("(")?;
+        let arguments = self.parse_expression_list()?;
+        self.eat_symbol(")")?;
+        Ok(SubroutineCallNode {
+            this,
+            name,
+            arguments,
+        })
     }
 }

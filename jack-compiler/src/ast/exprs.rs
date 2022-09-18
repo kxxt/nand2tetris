@@ -21,7 +21,7 @@ pub struct ExpressionPart {
 pub struct SubroutineCallNode {
     pub(crate) this: Option<IdentifierNode>,
     pub(crate) name: IdentifierNode,
-    pub(crate) parameters: NodeCollection<ExpressionNode>,
+    pub(crate) arguments: NodeCollection<ExpressionNode>,
 }
 
 #[derive(Debug, Clone, Copy)]

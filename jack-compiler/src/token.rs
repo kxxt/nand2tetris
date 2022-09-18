@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub(crate) struct Token {
+pub struct Token {
     pub(crate) kind: TokenKind,
     pub(crate) value: String,
 }
 
-pub(crate) struct TokenRef<'a> {
+pub struct TokenRef<'a> {
     pub(crate) kind: &'a TokenKind,
     pub(crate) value: &'a str,
 }

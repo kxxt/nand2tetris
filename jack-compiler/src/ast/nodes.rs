@@ -24,6 +24,7 @@ pub struct SubroutineDeclarationNode {
     pub(crate) return_type: Option<TypeNode>,
     pub(crate) name: IdentifierNode,
     pub(crate) parameters: NodeCollection<ParameterNode>,
+    pub(crate) body: SubroutineBody
 }
 
 #[derive(Debug)]

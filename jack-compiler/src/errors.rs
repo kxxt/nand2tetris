@@ -6,8 +6,10 @@ use crate::token::Token;
 pub enum ParserError {
     #[error("unexpected end of token stream")]
     UnexpectedEndOfStream,
-    #[error("unexpected token {0:?}, expected {1}")]
+    #[error("unexpected token {0}, expected {1}")]
     UnexpectedToken(Token, String),
+    #[error("the class name \"{0}\" didn't match file name stem \"{1}\"")]
+    ClassNameMismatch(String, String),
 }
 
 #[derive(Error, Debug)]

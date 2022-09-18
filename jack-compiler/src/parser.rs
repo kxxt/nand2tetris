@@ -89,7 +89,14 @@ impl<'a> Parser<'a> {
         if token.kind != TokenKind::Keyword || token.value != "class" {
             unexpected_token!(token, "keyword \"class\"");
         }
-        let name = self.eat_identifier()?.into();
+        let name = self.eat_identifier()?;
+        if name != self.source_name() {
+            return Err(ParserError::ClassNameMismatch(
+                name.clone(),
+                self.source_name().to_string(),
+            )
+            .into());
+        }
         self.eat_symbol("{")?;
         let variables = self.parse_class_variable_declarations()?;
         let mut subroutines = NodeCollection::new();
@@ -99,7 +106,7 @@ impl<'a> Parser<'a> {
         Ok(ClassNode {
             subroutines,
             variables,
-            name,
+            name: name.into(),
         })
     }
 

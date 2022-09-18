@@ -42,7 +42,17 @@ impl<'a> TryFrom<&'a str> for BinaryOperator {
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         lazy_static! {
-            static ref MAP: HashMap<&'static str, BinaryOperator> = HashMap::from([]);
+            static ref MAP: HashMap<&'static str, BinaryOperator> = HashMap::from([
+                ("+", BinaryOperator::Plus),
+                ("-", BinaryOperator::Minus),
+                ("*", BinaryOperator::Multiply),
+                ("/", BinaryOperator::Divide),
+                ("&", BinaryOperator::And),
+                ("|", BinaryOperator::Or),
+                ("<", BinaryOperator::LessThan),
+                (">", BinaryOperator::GreaterThan),
+                ("=", BinaryOperator::Equal)
+            ]);
         }
         MAP.get(value)
             .copied()
@@ -56,7 +66,7 @@ pub enum UnaryOperator {
     ArthemiticNegation,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum KeywordConstant {
     True,
     False,
@@ -64,7 +74,25 @@ pub enum KeywordConstant {
     This,
 }
 
-#[derive(Debug)]
+impl TryFrom<&str> for KeywordConstant {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        lazy_static! {
+            static ref MAP: HashMap<&'static str, KeywordConstant> = HashMap::from([
+                ("this", KeywordConstant::This),
+                ("null", KeywordConstant::Null),
+                ("true", KeywordConstant::True),
+                ("false", KeywordConstant::False)
+            ]);
+        }
+        MAP.get(value)
+            .copied()
+            .ok_or(anyhow!("Invalid keyword constant {}", value))
+    }
+}
+
+#[derive(Debug, derive_more::From)]
 pub enum TermNode {
     IntegerConstant(u16),
     StringConstant(String),

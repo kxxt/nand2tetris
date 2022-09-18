@@ -1,12 +1,12 @@
 mod test;
 mod token_stream;
-use std::borrow::Cow;
+
 
 use lazy_static::lazy_static;
 use regex::Regex;
 
 use super::errors::TokenizerError;
-use super::token::{token, Token, TokenKind};
+use super::token::{Token, TokenKind};
 pub(crate) use token_stream::{TokenResult, TokenStream};
 
 pub struct Source {

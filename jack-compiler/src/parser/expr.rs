@@ -22,6 +22,7 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
         if self.look_ahead_for_symbol(")")? {
             return Ok(list);
         }
+        list.push(self.parse_expression()?);
         while self.look_ahead_for_symbol(",")? {
             self.eat()?;
             list.push(self.parse_expression()?);

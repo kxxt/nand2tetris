@@ -7,9 +7,9 @@ pub struct IdentifierNode(pub(crate) String);
 #[derive(Debug)]
 
 pub struct ClassNode {
-    pub(crate) class_name: IdentifierNode,
-    pub(crate) class_variable_declarations: NodeCollection<ClassVariableDeclarationNode>,
-    pub(crate) subroutine_declarations: NodeCollection<SubroutineDeclarationNode>,
+    pub(crate) name: IdentifierNode,
+    pub(crate) variables: NodeCollection<ClassVariableDeclarationNode>,
+    pub(crate) subroutines: NodeCollection<SubroutineDeclarationNode>,
 }
 
 #[derive(Debug)]

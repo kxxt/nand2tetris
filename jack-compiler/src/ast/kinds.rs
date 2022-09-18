@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ClassVariableKind {
     Static,
     Field,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SubroutineKind {
     Constructor,
     Function,

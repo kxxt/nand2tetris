@@ -5,26 +5,26 @@ use lazy_static::lazy_static;
 
 use super::{IdentifierNode, NodeBox, NodeCollection};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ExpressionNode {
     pub(crate) term: NodeBox<TermNode>,
     pub(crate) parts: NodeCollection<ExpressionPart>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ExpressionPart {
     pub(crate) operator: BinaryOperator,
     pub(crate) term: NodeBox<TermNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SubroutineCallNode {
     pub(crate) this: Option<IdentifierNode>,
     pub(crate) name: IdentifierNode,
     pub(crate) arguments: NodeCollection<ExpressionNode>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperator {
     Plus,
     Minus,
@@ -60,7 +60,7 @@ impl TryFrom<&str> for BinaryOperator {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnaryOperator {
     LogicalNegation,
     ArthemiticNegation,
@@ -78,7 +78,7 @@ impl TryFrom<&str> for UnaryOperator {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum KeywordConstant {
     True,
     False,
@@ -104,7 +104,7 @@ impl TryFrom<&str> for KeywordConstant {
     }
 }
 
-#[derive(Debug, derive_more::From)]
+#[derive(Debug, derive_more::From, PartialEq)]
 pub enum TermNode {
     IntegerConstant(u16),
     StringConstant(String),
@@ -117,13 +117,13 @@ pub enum TermNode {
     Parentheses(NodeBox<ExpressionNode>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ArrayElementNode {
     pub(crate) name: IdentifierNode,
     pub(crate) index: ExpressionNode,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct UnaryOperationNode {
     pub(crate) operator: UnaryOperator,
     pub(crate) subject: NodeBox<TermNode>,

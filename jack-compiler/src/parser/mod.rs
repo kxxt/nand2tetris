@@ -2,6 +2,7 @@ mod classes;
 mod expr;
 mod macros;
 mod statements;
+mod tests;
 use self::macros::unexpected_token;
 use super::errors::ParserError;
 use super::token::{Token, TokenKind, TokenRef};

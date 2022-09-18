@@ -1,5 +1,6 @@
+use std::convert::{TryFrom, TryInto};
+
 use crate::ast::*;
-use crate::errors::TokenizerError;
 
 use super::errors::ParserError;
 use super::token::{Token, TokenKind, TokenRef};
@@ -9,6 +10,7 @@ use anyhow::{Ok, Result};
 pub struct Parser<'a> {
     token_stream: TokenStream<'a>,
     token_buffer: Option<Token>,
+    token_storage: Option<Token>,
 }
 macro_rules! unexpected_token {
     ($token:expr, $($t:tt)*) => {
@@ -31,6 +33,7 @@ impl<'a> Parser<'a> {
         Self {
             token_stream,
             token_buffer: None,
+            token_storage: None,
         }
     }
 
@@ -45,12 +48,26 @@ impl<'a> Parser<'a> {
     /// grab next token with confidence
     fn next_token(&mut self) -> Result<Token> {
         Ok(if self.token_buffer.is_some() {
-            self.token_buffer.take().unwrap()
+            let v = self.token_buffer.take().unwrap();
+            self.token_buffer = self.token_storage.take();
+            v
         } else {
             self.token_stream
                 .next()
                 .ok_or(ParserError::UnexpectedEndOfStream)??
         })
+    }
+
+    /// put back one token into buffer
+    fn store_token(&mut self, token: Token) {
+        if self.token_buffer.is_none() {
+            self.token_buffer = Some(token);
+        } else if self.token_storage.is_none() {
+            self.token_storage = self.token_buffer.take();
+            self.token_buffer = Some(token);
+        } else {
+            panic!("Invalid parser state! No space to store token!");
+        }
     }
 
     /// peek next token
@@ -379,7 +396,80 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_term(&mut self) -> Result<NodeBox<TermNode>> {
-        todo!()
+        match self.next_token()? {
+            Token {
+                kind: TokenKind::IntegerConstant,
+                value,
+            } => Ok(NodeBox::new(value.parse::<u16>().unwrap().into())),
+            Token {
+                kind: TokenKind::StringConstant,
+                value,
+            } => Ok(NodeBox::new(value.into())),
+            Token {
+                kind: k @ TokenKind::Keyword,
+                value,
+            } => Ok(NodeBox::new(
+                KeywordConstant::try_from(value.as_str())
+                    .map_err(|_| {
+                        Into::<anyhow::Error>::into(ParserError::UnexpectedToken(
+                            Token { kind: k, value },
+                            r#""this", "null", "true" or "false""#.to_string(),
+                        ))
+                    })?
+                    .into(),
+            )),
+            Token {
+                kind: TokenKind::Symbol,
+                value,
+            } if value == "(" => {
+                let expr = self.parse_expression()?;
+                self.eat_symbol(")")?;
+                Ok(NodeBox::new(TermNode::Parentheses(
+                    NodeBox::new(expr).into(),
+                )))
+            }
+            Token {
+                kind: k @ TokenKind::Symbol,
+                value,
+            } => {
+                let operator = UnaryOperator::try_from(value.as_str()).map_err(|_| {
+                    ParserError::UnexpectedToken(
+                        Token { kind: k, value },
+                        "\"-\" or \"~\"".to_string(),
+                    )
+                })?;
+                let subject = self.parse_term()?;
+                Ok(NodeBox::new(
+                    UnaryOperationNode { operator, subject }.into(),
+                ))
+            }
+            Token {
+                kind: k @ TokenKind::Identifier,
+                value,
+            } => match self.peek()? {
+                Some(Token {
+                    kind: TokenKind::Symbol,
+                    value: symbol,
+                }) => Ok(NodeBox::new(match symbol.as_str() {
+                    "." => {
+                        self.store_token(Token { kind: k, value });
+                        let call = self.parse_subroutine_call()?;
+                        call.into()
+                    }
+                    "[" => {
+                        let index = self.parse_array_index()?.unwrap();
+                        ArrayElementNode {
+                            name: value.into(),
+                            index,
+                        }
+                        .into()
+                    }
+                    _ => unexpected_token!(self.next_token()?, r#"".", "[" or nothing"#),
+                })),
+                None => Ok(NodeBox::new(IdentifierNode(value).into())),
+                token => unexpected_token!(token.unwrap().clone(), "symbol or nothing"),
+            },
+        }
     }
 
     fn look_ahead_for_op(&mut self) -> Result<Option<BinaryOperator>> {

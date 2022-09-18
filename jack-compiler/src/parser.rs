@@ -136,17 +136,16 @@ impl<'a> Parser<'a> {
             _ => unexpected_token!(token, "type"),
         };
         let mut names = Vec::new();
-        let token = self.next_token()?;
-        if let Token {
-            kind: TokenKind::Identifier,
-            value,
-        } = token
+        names.push(self.eat_identifier()?.into());
+        while let Some(TokenRef {
+            kind: TokenKind::Symbol,
+            value: ",",
+        }) = self.peek()?.map(|x| x.as_ref())
         {
-            names.push(value.into())
-        } else {
-            unexpected_token!(token, "identifier");
+            self.eat()?;
+            names.push(self.eat_identifier()?.into());
         }
-        todo!();
+
         Ok(VariableDeclarationNode { r#type, names })
     }
 }

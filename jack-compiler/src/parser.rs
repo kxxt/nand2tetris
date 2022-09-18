@@ -274,11 +274,39 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_let_statement(&mut self) -> Result<LetNode> {
-        todo!()
+        // The parse_statements method guarantees this token is "let"
+        self.eat()?;
+        let name = self.eat_identifier()?.into();
+        let index = self.parse_array_index()?;
+        self.eat_symbol("=")?;
+        let value = self.parse_expression()?;
+        self.eat_symbol(";");
+        return Ok(LetNode { name, index, value });
     }
 
     fn parse_if_statement(&mut self) -> Result<IfElseNode> {
-        todo!()
+        // The parse_statements method guarantees this token is "if"
+        self.eat()?;
+        self.eat_symbol("(")?;
+        let condition = self.parse_expression()?;
+        self.eat_symbol(")");
+        self.eat_symbol("{")?;
+        let statements = self.parse_statements()?;
+        self.eat_symbol("}")?;
+        let else_node = if self.look_ahead_for_symbol("else")? {
+            self.eat()?;
+            self.eat_symbol("{");
+            let statements = self.parse_statements()?;
+            self.eat_symbol("}");
+            Some(statements)
+        } else {
+            None
+        };
+        Ok(IfElseNode {
+            condition,
+            statements,
+            else_node,
+        })
     }
 
     fn parse_while_statement(&mut self) -> Result<WhileNode> {
@@ -290,6 +318,21 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self) -> Result<ReturnNode> {
+        todo!()
+    }
+
+    fn parse_array_index(&mut self) -> Result<Option<ExpressionNode>> {
+        if self.look_ahead_for_symbol("[")? {
+            self.eat()?;
+            let expr = self.parse_expression()?;
+            self.eat_symbol("]");
+            Ok(Some(expr))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn parse_expression(&self) -> Result<ExpressionNode> {
         todo!()
     }
 }

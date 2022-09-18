@@ -333,7 +333,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self) -> Result<ReturnNode> {
-        // The parse_statements method guarantees this token is "do"
+        // The parse_statements method guarantees this token is "return"
         self.eat()?;
         let value = if self.look_ahead_for_symbol(";")? {
             None

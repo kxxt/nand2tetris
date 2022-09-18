@@ -99,7 +99,7 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
                         }
                         .into()
                     }
-                    _ => unexpected_token!(self.next_token()?, r#"".", "[" or nothing"#),
+                    _ => IdentifierNode(value).into(),
                 })),
                 None => Ok(NodeBox::new(IdentifierNode(value).into())),
                 token => unexpected_token!(token.unwrap().clone(), "symbol or nothing"),

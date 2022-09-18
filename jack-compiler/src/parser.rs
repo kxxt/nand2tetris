@@ -85,6 +85,20 @@ impl<'a> Parser<'a> {
         Ok(ClassVariableDeclarationNode { kind, variables })
     }
 
+    fn parse_class_variable_declarations(
+        &mut self,
+    ) -> Result<NodeCollection<ClassVariableDeclarationNode>> {
+        let mut list = NodeCollection::new();
+        while let Some(TokenRef {
+            kind: TokenKind::Keyword,
+            value: "static" | "field",
+        }) = self.peek()?.map(|x| x.as_ref())
+        {
+            list.push(self.parse_class_variable_declaration()?)
+        }
+        Ok(list)
+    }
+
     fn eat_identifier(&mut self) -> Result<String> {
         let token = self.next_token()?;
         if token.kind == TokenKind::Identifier {
@@ -187,8 +201,10 @@ impl<'a> Parser<'a> {
         let return_type = self.parse_type(true)?;
         // parse subroutine name
         let name = self.eat_identifier()?.into();
+        self.eat_symbol("(")?;
         // parse parameter list
         let parameters = self.parse_parameter_list()?;
+        self.eat_symbol(")")?;
         // parse subroutine body
         let body = self.parse_subroutine_body()?;
         Ok(SubroutineDeclarationNode {
@@ -224,6 +240,18 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_subroutine_body(&mut self) -> Result<SubroutineBody> {
+        self.eat_symbol("{")?;
+
+        let mut variables = NodeCollection::new();
+        while let Some(TokenRef {
+            kind: TokenKind::Keyword,
+            value: "var",
+        }) = self.peek()?.map(|x| x.as_ref())
+        {
+            variables.push(self.parse_variable_declaration(false)?);
+        }
+        todo!();
+        self.eat_symbol("}")?;
         todo!()
     }
 }

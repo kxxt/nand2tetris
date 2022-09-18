@@ -42,10 +42,6 @@ impl<'a> Parser<'a> {
         self.token_stream.source_name()
     }
 
-    fn parse_class(&mut self) -> ClassNode {
-        todo!()
-    }
-
     /// grab next token with confidence
     fn next_token(&mut self) -> Result<Token> {
         Ok(if self.token_buffer.is_some() {
@@ -69,6 +65,10 @@ impl<'a> Parser<'a> {
     fn eat(&mut self) -> Result<()> {
         self.next_token()?;
         Ok(())
+    }
+
+    fn parse_class(&mut self) -> ClassNode {
+        todo!()
     }
 
     fn parse_class_variable_declaration(&mut self) -> Result<ClassVariableDeclarationNode> {

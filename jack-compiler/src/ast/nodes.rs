@@ -3,7 +3,7 @@ use super::statements::*;
 use super::NodeCollection;
 
 #[derive(Debug, derive_more::From)]
-pub struct IdentifierNode(String);
+pub struct IdentifierNode(pub(crate) String);
 #[derive(Debug)]
 
 pub struct ClassNode {
@@ -24,7 +24,7 @@ pub struct SubroutineDeclarationNode {
     pub(crate) return_type: Option<TypeNode>,
     pub(crate) name: IdentifierNode,
     pub(crate) parameters: NodeCollection<ParameterNode>,
-    pub(crate) body: SubroutineBody
+    pub(crate) body: SubroutineBody,
 }
 
 #[derive(Debug)]

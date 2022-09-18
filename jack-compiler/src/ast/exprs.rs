@@ -1,9 +1,14 @@
+use std::{collections::HashMap, convert::TryFrom};
+
+use anyhow::anyhow;
+use lazy_static::lazy_static;
+
 use super::{IdentifierNode, NodeBox, NodeCollection};
 
 #[derive(Debug)]
 pub struct ExpressionNode {
     pub(crate) term: NodeBox<TermNode>,
-    pub(crate) next: NodeCollection<ExpressionPart>,
+    pub(crate) parts: NodeCollection<ExpressionPart>,
 }
 
 #[derive(Debug)]
@@ -19,7 +24,7 @@ pub struct SubroutineCallNode {
     pub(crate) parameters: NodeCollection<ExpressionNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum BinaryOperator {
     Plus,
     Minus,
@@ -30,6 +35,19 @@ pub enum BinaryOperator {
     LessThan,
     GreaterThan,
     Equal,
+}
+
+impl<'a> TryFrom<&'a str> for BinaryOperator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        lazy_static! {
+            static ref MAP: HashMap<&'static str, BinaryOperator> = HashMap::from([]);
+        }
+        MAP.get(value)
+            .copied()
+            .ok_or(anyhow!("Invalid binary operator {}", value))
+    }
 }
 
 #[derive(Debug)]

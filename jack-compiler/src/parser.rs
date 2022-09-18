@@ -1,7 +1,4 @@
-use crate::ast::{
-    ClassNode, ClassVariableDeclarationNode, ClassVariableKind, IdentifierNode, TypeNode,
-    VariableDeclarationNode,
-};
+use crate::ast::*;
 use crate::errors::TokenizerError;
 
 use super::errors::ParserError;
@@ -74,7 +71,7 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn parse_class_variables(&mut self) -> Result<ClassVariableDeclarationNode> {
+    fn parse_class_variable_declaration(&mut self) -> Result<ClassVariableDeclarationNode> {
         let token = self.next_token()?;
         if token.kind != TokenKind::Keyword {
             unexpected_token!(token, "static or field");
@@ -84,7 +81,8 @@ impl<'a> Parser<'a> {
             "field" => Ok(ClassVariableKind::Field),
             _ => unexpected_token!(token, "static or field"),
         }?;
-        todo!()
+        let variables = self.parse_variable_declaration(true)?;
+        Ok(ClassVariableDeclarationNode { kind, variables })
     }
 
     fn eat_identifier(&mut self) -> Result<String> {
@@ -105,6 +103,43 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn look_ahead_for_symbol(&mut self, symbol: &str) -> Result<bool> {
+        let token = self.peek()?;
+        if token.is_none() {
+            return Ok(false);
+        }
+        let token = token.unwrap();
+        Ok(token.kind == TokenKind::Symbol && token.value == symbol)
+    }
+
+    fn parse_type(&mut self, permit_void: bool) -> Result<Option<TypeNode>> {
+        let token = self.next_token()?;
+        let err_msg = if permit_void {
+            "type or \"void\""
+        } else {
+            "type"
+        };
+        if token.kind == TokenKind::Keyword {
+            match token.value.as_str() {
+                "int" => Ok(Some(TypeNode::Int)),
+                "char" => Ok(Some(TypeNode::Char)),
+                "boolean" => Ok(Some(TypeNode::Boolean)),
+                "void" => {
+                    if permit_void {
+                        Ok(None)
+                    } else {
+                        unexpected_token!(token, "type");
+                    }
+                }
+                _ => unexpected_token!(token, "{}", err_msg),
+            }
+        } else if token.kind == TokenKind::Identifier {
+            Ok(Some(TypeNode::Class(token.value.into())))
+        } else {
+            unexpected_token!(token, "{}", err_msg);
+        }
+    }
+
     fn parse_variable_declaration(
         &mut self,
         skip_var_token: bool,
@@ -115,27 +150,8 @@ impl<'a> Parser<'a> {
                 value: "var",
             })?;
         }
-        let token = self.next_token()?;
-        let r#type = match token.as_ref() {
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "boolean",
-            } => TypeNode::Boolean,
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "int",
-            } => TypeNode::Int,
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "char",
-            } => TypeNode::Char,
-            TokenRef {
-                kind: TokenKind::Identifier,
-                ..
-            } => TypeNode::Class(token.value.into()),
-            _ => unexpected_token!(token, "type"),
-        };
-        let mut names = Vec::new();
+        let r#type = self.parse_type(false)?.unwrap();
+        let mut names = NodeCollection::new();
         names.push(self.eat_identifier()?.into());
         while let Some(TokenRef {
             kind: TokenKind::Symbol,
@@ -145,7 +161,69 @@ impl<'a> Parser<'a> {
             self.eat()?;
             names.push(self.eat_identifier()?.into());
         }
-
+        self.eat_symbol(";")?;
         Ok(VariableDeclarationNode { r#type, names })
+    }
+
+    fn parse_subroutine_declaration(&mut self) -> Result<SubroutineDeclarationNode> {
+        // parse (constructor|function|method)
+        let token = self.next_token()?;
+        let kind = match token.as_ref() {
+            TokenRef {
+                kind: TokenKind::Keyword,
+                value: "constructor",
+            } => Ok(SubroutineKind::Constructor),
+            TokenRef {
+                kind: TokenKind::Keyword,
+                value: "function",
+            } => Ok(SubroutineKind::Function),
+            TokenRef {
+                kind: TokenKind::Keyword,
+                value: "method",
+            } => Ok(SubroutineKind::Method),
+            _ => unexpected_token!(token, r#""constructor", "function" or "method""#),
+        }?;
+        // parse (void|type)
+        let return_type = self.parse_type(true)?;
+        // parse subroutine name
+        let name = self.eat_identifier()?.into();
+        // parse parameter list
+        let parameters = self.parse_parameter_list()?;
+        // parse subroutine body
+        let body = self.parse_subroutine_body()?;
+        Ok(SubroutineDeclarationNode {
+            kind,
+            return_type,
+            name,
+            parameters,
+            body,
+        })
+    }
+
+    fn parse_parameter(&mut self) -> Result<ParameterNode> {
+        let r#type = self.parse_type(false)?.unwrap();
+        let name = self.eat_identifier()?.into();
+        Ok(ParameterNode { r#type, name })
+    }
+
+    fn parse_parameter_list(&mut self) -> Result<NodeCollection<ParameterNode>> {
+        let mut list = NodeCollection::new();
+        if self.look_ahead_for_symbol(")")? {
+            return Ok(list);
+        }
+        list.push(self.parse_parameter()?);
+        while let Some(TokenRef {
+            kind: TokenKind::Symbol,
+            value: ",",
+        }) = self.peek()?.map(|x| x.as_ref())
+        {
+            self.eat()?;
+            list.push(self.parse_parameter()?);
+        }
+        Ok(list)
+    }
+
+    fn parse_subroutine_body(&mut self) -> Result<SubroutineBody> {
+        todo!()
     }
 }

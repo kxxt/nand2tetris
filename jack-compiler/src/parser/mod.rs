@@ -98,7 +98,7 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
         if token.kind == TokenKind::Symbol && token.value == symbol {
             Ok(token.value)
         } else {
-            unexpected_token!(token, "symbol \"\"");
+            unexpected_token!(token, "symbol \"{}\"", symbol);
         }
     }
 

@@ -113,6 +113,7 @@ pub enum TermNode {
     ArrayElement(ArrayElementNode),
     SubroutineCall(SubroutineCallNode),
     UnaryOperation(UnaryOperationNode),
+    #[from(ignore)] // ignore this because it causes confusion
     Parentheses(NodeBox<ExpressionNode>),
 }
 

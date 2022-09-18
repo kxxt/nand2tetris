@@ -110,10 +110,12 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
         let kind = self
             .look_ahead_for_subroutine_kind()?
             .ok_or(ParserError::UnexpectedToken(
+                // The next line will always be evaluated. This is intended.
+                // If an error was raised, it will provide the token.
+                // If it's ok, it will also be evaluated, to skip this now useless token.
                 self.next_token()?,
                 r#""constructor", "function" or "method""#.to_string(),
             ))?;
-        self.eat()?;
         // parse (void|type)
         let return_type = self.parse_type(true)?;
         // parse subroutine name

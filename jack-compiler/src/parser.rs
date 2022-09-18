@@ -13,16 +13,22 @@ pub struct Parser<'a> {
     token_stream: TokenStream<'a>,
     token_buffer: Option<Token>,
 }
+macro_rules! unexpected_token {
+    ($token:ident, $expected:expr) => {
+        return Err(ParserError::UnexpectedToken($token, $expected.to_string()).into())
+    };
+}
 
 impl Token {
     pub fn should_eq(self, token: TokenRef) -> Result<Token> {
         if self == token {
             Ok(self)
         } else {
-            Err(ParserError::UnexpectedToken(self, token.to_string()).into())
+            unexpected_token!(self, token);
         }
     }
 }
+
 
 impl<'a> Parser<'a> {
     pub fn new(token_stream: TokenStream<'a>) -> Self {
@@ -64,12 +70,12 @@ impl<'a> Parser<'a> {
     fn parse_class_variables(&mut self) -> Result<ClassVariableDeclarationNode> {
         let token = self.next_token()?;
         if token.kind != TokenKind::Keyword {
-            return Err(ParserError::UnexpectedToken(token, "static or field".to_string()).into());
+            unexpected_token!(token, "static or field");
         }
         let kind = match token.value.as_str() {
             "static" => Ok(ClassVariableKind::Static),
             "field" => Ok(ClassVariableKind::Field),
-            _ => Err(ParserError::UnexpectedToken(token, "static or field".to_string()).into()),
+            _ => unexpected_token!(token, "static or field"),
         }?;
         todo!()
     }
@@ -102,7 +108,7 @@ impl<'a> Parser<'a> {
                 kind: TokenKind::Identifier,
                 ..
             } => TypeNode::Class(token.value.into()),
-            _ => return Err(ParserError::UnexpectedToken(token, "type".to_string()).into()),
+            _ => unexpected_token!(token, "type"),
         };
         let mut names = Vec::new();
         let token = self.next_token()?;
@@ -113,7 +119,7 @@ impl<'a> Parser<'a> {
         {
             names.push(value.into())
         } else {
-            return Err(ParserError::UnexpectedToken(token, "identifier".to_string()).into());
+            unexpected_token!(token, "identifier");
         }
         todo!();
         Ok(VariableDeclarationNode { r#type, names })

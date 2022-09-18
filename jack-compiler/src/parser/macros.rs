@@ -286,7 +286,8 @@ pub(super) use n_cmd;
 
 macro_rules! n_subroutine {
     ($kind:ident $ret:ident $name:ident ($($type:ident $param:ident),*) {
-        $($body:tt)*
+        variables: { $($v:tt)* }, 
+        statements: [ $($s:tt)* ]
     }) => {
         SubroutineDeclarationNode {
             kind: SubroutineKind::$kind,
@@ -299,7 +300,10 @@ macro_rules! n_subroutine {
                 }),*
             ],
             body: SubroutineBody {
-                $($body)*
+                variables: n_vars!{ $($v)* },
+                statements: vec![
+                    $($s)*
+                ]
             }
         }
     };

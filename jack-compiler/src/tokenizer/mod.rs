@@ -7,7 +7,7 @@ use regex::Regex;
 
 use super::errors::TokenizerError;
 use super::token::{token, Token, TokenKind};
-pub(crate) use token_stream::TokenStream;
+pub(crate) use token_stream::{TokenResult, TokenStream};
 
 pub struct Source {
     pub content: String,

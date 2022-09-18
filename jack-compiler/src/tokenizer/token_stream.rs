@@ -7,6 +7,8 @@ pub struct TokenStream<'a> {
     pub(super) offset: usize,
 }
 
+pub type TokenResult = Result<Token, TokenizerError>;
+
 impl<'a> TokenStream<'a> {
     pub fn new(source: Cow<'a, str>, source_name: &'a str) -> Self {
         Self {
@@ -39,7 +41,7 @@ impl<'a> TokenStream<'a> {
 }
 
 impl<'a> Iterator for TokenStream<'a> {
-    type Item = Result<Token, TokenizerError>;
+    type Item = TokenResult;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.eat_whitespace();

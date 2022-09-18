@@ -280,7 +280,7 @@ impl<'a> Parser<'a> {
         let index = self.parse_array_index()?;
         self.eat_symbol("=")?;
         let value = self.parse_expression()?;
-        self.eat_symbol(";");
+        self.eat_symbol(";")?;
         return Ok(LetNode { name, index, value });
     }
 
@@ -289,15 +289,15 @@ impl<'a> Parser<'a> {
         self.eat()?;
         self.eat_symbol("(")?;
         let condition = self.parse_expression()?;
-        self.eat_symbol(")");
+        self.eat_symbol(")")?;
         self.eat_symbol("{")?;
         let statements = self.parse_statements()?;
         self.eat_symbol("}")?;
         let else_node = if self.look_ahead_for_symbol("else")? {
             self.eat()?;
-            self.eat_symbol("{");
+            self.eat_symbol("{")?;
             let statements = self.parse_statements()?;
-            self.eat_symbol("}");
+            self.eat_symbol("}")?;
             Some(statements)
         } else {
             None
@@ -314,7 +314,7 @@ impl<'a> Parser<'a> {
         self.eat()?;
         self.eat_symbol("(")?;
         let condition = self.parse_expression()?;
-        self.eat_symbol(")");
+        self.eat_symbol(")")?;
         self.eat_symbol("{")?;
         let statements = self.parse_statements()?;
         self.eat_symbol("}")?;
@@ -348,7 +348,7 @@ impl<'a> Parser<'a> {
         if self.look_ahead_for_symbol("[")? {
             self.eat()?;
             let expr = self.parse_expression()?;
-            self.eat_symbol("]");
+            self.eat_symbol("]")?;
             Ok(Some(expr))
         } else {
             Ok(None)

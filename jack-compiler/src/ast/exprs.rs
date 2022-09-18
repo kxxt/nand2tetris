@@ -1,6 +1,6 @@
 use std::{collections::HashMap, convert::TryFrom};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use lazy_static::lazy_static;
 
 use super::{IdentifierNode, NodeBox, NodeCollection};
@@ -37,10 +37,10 @@ pub enum BinaryOperator {
     Equal,
 }
 
-impl<'a> TryFrom<&'a str> for BinaryOperator {
+impl TryFrom<&str> for BinaryOperator {
     type Error = anyhow::Error;
 
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         lazy_static! {
             static ref MAP: HashMap<&'static str, BinaryOperator> = HashMap::from([
                 ("+", BinaryOperator::Plus),
@@ -60,10 +60,22 @@ impl<'a> TryFrom<&'a str> for BinaryOperator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum UnaryOperator {
     LogicalNegation,
     ArthemiticNegation,
+}
+
+impl TryFrom<&str> for UnaryOperator {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "-" => Ok(Self::ArthemiticNegation),
+            "~" => Ok(Self::LogicalNegation),
+            _ => bail!("Invalid unary operator {}", value)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

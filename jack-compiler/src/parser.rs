@@ -37,8 +37,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse(&mut self) -> AST {
-        todo!()
+    fn parse(&mut self) -> Result<AST> {
+        self.parse_class()
     }
 
     pub fn source_name(&self) -> &str {
@@ -84,8 +84,23 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn parse_class(&mut self) -> ClassNode {
-        todo!()
+    fn parse_class(&mut self) -> Result<ClassNode> {
+        let token = self.next_token()?;
+        if token.kind != TokenKind::Keyword || token.value != "class" {
+            unexpected_token!(token, "keyword \"class\"");
+        }
+        let name = self.eat_identifier()?.into();
+        self.eat_symbol("{")?;
+        let variables = self.parse_class_variable_declarations()?;
+        let mut subroutines = NodeCollection::new();
+        while self.look_ahead_for_subroutine_kind()?.is_some() {
+            subroutines.push(self.parse_subroutine_declaration()?);
+        }
+        Ok(ClassNode {
+            subroutines,
+            variables,
+            name,
+        })
     }
 
     fn parse_class_variable_declaration(&mut self) -> Result<ClassVariableDeclarationNode> {
@@ -196,24 +211,33 @@ impl<'a> Parser<'a> {
         Ok(VariableDeclarationNode { r#type, names })
     }
 
+    fn look_ahead_for_subroutine_kind(&mut self) -> Result<Option<SubroutineKind>> {
+        Ok(match self.peek()?.map(|r| r.as_ref()) {
+            Some(TokenRef {
+                kind: TokenKind::Keyword,
+                value: "constructor",
+            }) => Some(SubroutineKind::Constructor),
+            Some(TokenRef {
+                kind: TokenKind::Keyword,
+                value: "function",
+            }) => Some(SubroutineKind::Function),
+            Some(TokenRef {
+                kind: TokenKind::Keyword,
+                value: "method",
+            }) => Some(SubroutineKind::Method),
+            _ => None,
+        })
+    }
+
     fn parse_subroutine_declaration(&mut self) -> Result<SubroutineDeclarationNode> {
         // parse (constructor|function|method)
         let token = self.next_token()?;
-        let kind = match token.as_ref() {
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "constructor",
-            } => Ok(SubroutineKind::Constructor),
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "function",
-            } => Ok(SubroutineKind::Function),
-            TokenRef {
-                kind: TokenKind::Keyword,
-                value: "method",
-            } => Ok(SubroutineKind::Method),
-            _ => unexpected_token!(token, r#""constructor", "function" or "method""#),
-        }?;
+        let kind = self
+            .look_ahead_for_subroutine_kind()?
+            .ok_or(ParserError::UnexpectedToken(
+                token,
+                r#""constructor", "function" or "method""#.to_string(),
+            ))?;
         // parse (void|type)
         let return_type = self.parse_type(true)?;
         // parse subroutine name
@@ -267,9 +291,12 @@ impl<'a> Parser<'a> {
         {
             variables.push(self.parse_variable_declaration(false)?);
         }
-        todo!();
+        let statements = self.parse_statements()?;
         self.eat_symbol("}")?;
-        todo!()
+        Ok(SubroutineBody {
+            statements,
+            variables,
+        })
     }
     fn parse_statements(&mut self) -> Result<NodeCollection<StatementNode>> {
         let mut list: Vec<StatementNode> = NodeCollection::new();

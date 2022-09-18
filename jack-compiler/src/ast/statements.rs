@@ -1,13 +1,14 @@
 use super::exprs::*;
 use super::nodes::*;
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::From)]
 pub enum StatementNode {
     IfElse(IfElseNode),
     Do(DoNode),
     Let(LetNode),
     While(WhileNode),
     SubroutineCall(SubroutineCallNode),
+    Return(ReturnNode),
 }
 
 #[derive(Debug)]

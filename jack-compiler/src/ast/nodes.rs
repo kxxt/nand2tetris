@@ -7,23 +7,23 @@ pub struct IdentifierNode(String);
 #[derive(Debug)]
 
 pub struct ClassNode {
-    class_name: IdentifierNode,
-    class_variable_declarations: NodeCollection<ClassVariableDeclarationNode>,
-    subroutine_declarations: NodeCollection<SubroutineDeclarationNode>,
+    pub(crate) class_name: IdentifierNode,
+    pub(crate) class_variable_declarations: NodeCollection<ClassVariableDeclarationNode>,
+    pub(crate) subroutine_declarations: NodeCollection<SubroutineDeclarationNode>,
 }
 
 #[derive(Debug)]
 pub struct ClassVariableDeclarationNode {
-    kind: ClassVariableKind,
-    variables: NodeCollection<VariableDeclarationNode>,
+    pub(crate) kind: ClassVariableKind,
+    pub(crate) variables: VariableDeclarationNode,
 }
 
 #[derive(Debug)]
 pub struct SubroutineDeclarationNode {
-    kind: SubroutineKind,
-    return_type: Option<TypeNode>,
-    name: IdentifierNode,
-    parameters: NodeCollection<ParameterNode>,
+    pub(crate) kind: SubroutineKind,
+    pub(crate) return_type: Option<TypeNode>,
+    pub(crate) name: IdentifierNode,
+    pub(crate) parameters: NodeCollection<ParameterNode>,
 }
 
 #[derive(Debug)]

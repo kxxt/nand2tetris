@@ -14,8 +14,8 @@ pub struct Parser<'a> {
     token_buffer: Option<Token>,
 }
 macro_rules! unexpected_token {
-    ($token:ident, $expected:expr) => {
-        return Err(ParserError::UnexpectedToken($token, $expected.to_string()).into())
+    ($token:expr, $($t:tt)*) => {
+        return Err(ParserError::UnexpectedToken($token, format!($($t)*)).into())
     };
 }
 
@@ -24,11 +24,10 @@ impl Token {
         if self == token {
             Ok(self)
         } else {
-            unexpected_token!(self, token);
+            unexpected_token!(self, "{}", token);
         }
     }
 }
-
 
 impl<'a> Parser<'a> {
     pub fn new(token_stream: TokenStream<'a>) -> Self {
@@ -50,6 +49,7 @@ impl<'a> Parser<'a> {
         todo!()
     }
 
+    /// grab next token with confidence
     fn next_token(&mut self) -> Result<Token> {
         Ok(if self.token_buffer.is_some() {
             self.token_buffer.take().unwrap()
@@ -60,11 +60,18 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// peek next token
     fn peek(&mut self) -> Result<Option<&Token>> {
         if self.token_buffer.is_none() {
             self.token_buffer = self.token_stream.next().transpose()?;
         }
         Ok(self.token_buffer.as_ref())
+    }
+
+    /// eat one token with confidence
+    fn eat(&mut self) -> Result<()> {
+        self.next_token()?;
+        Ok(())
     }
 
     fn parse_class_variables(&mut self) -> Result<ClassVariableDeclarationNode> {
@@ -78,6 +85,24 @@ impl<'a> Parser<'a> {
             _ => unexpected_token!(token, "static or field"),
         }?;
         todo!()
+    }
+
+    fn eat_identifier(&mut self) -> Result<String> {
+        let token = self.next_token()?;
+        if token.kind == TokenKind::Identifier {
+            Ok(token.value)
+        } else {
+            unexpected_token!(token, "identifier");
+        }
+    }
+
+    fn eat_symbol(&mut self, symbol: &str) -> Result<String> {
+        let token = self.next_token()?;
+        if token.kind == TokenKind::Symbol && token.value == symbol {
+            Ok(token.value)
+        } else {
+            unexpected_token!(token, "symbol \"\"");
+        }
     }
 
     fn parse_variable_declaration(

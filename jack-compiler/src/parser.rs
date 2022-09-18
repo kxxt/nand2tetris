@@ -355,8 +355,29 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_expression(&self) -> Result<ExpressionNode> {
+    fn parse_expression(&mut self) -> Result<ExpressionNode> {
+        let term = self.parse_term()?;
+        let mut parts = NodeCollection::new();
+        while let Some(operator) = self.look_ahead_for_op()? {
+            self.eat()?;
+            let term = self.parse_term()?;
+            parts.push(ExpressionPart { operator, term })
+        }
+        Ok(ExpressionNode { term, parts })
+    }
+
+    fn parse_term(&mut self) -> Result<NodeBox<TermNode>> {
         todo!()
+    }
+
+    fn look_ahead_for_op(&mut self) -> Result<Option<BinaryOperator>> {
+        Ok(match self.peek()?.map(|t| t.as_ref()) {
+            Some(TokenRef {
+                kind: TokenKind::Symbol,
+                value,
+            }) => value.try_into().ok(),
+            _ => None,
+        })
     }
 
     fn parse_subroutine_call(&mut self) -> Result<SubroutineCallNode> {

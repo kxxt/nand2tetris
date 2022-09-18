@@ -5,14 +5,15 @@ mod statements;
 use self::macros::unexpected_token;
 use super::errors::ParserError;
 use super::token::{Token, TokenKind, TokenRef};
-use super::{ast::AST, tokenizer::TokenStream};
+use super::{ast::AST, tokenizer::TokenResult};
 use crate::ast::*;
 use anyhow::{Ok, Result};
 
-pub struct Parser<'a> {
-    token_stream: TokenStream<'a>,
+pub struct Parser<I: Iterator<Item = TokenResult>> {
+    token_stream: I,
     token_buffer: Option<Token>,
     token_storage: Option<Token>,
+    source_name: String,
 }
 
 impl Token {
@@ -25,12 +26,13 @@ impl Token {
     }
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(token_stream: TokenStream<'a>) -> Self {
+impl<I: Iterator<Item = TokenResult>> Parser<I> {
+    pub fn new(token_stream: I, source_name: String) -> Self {
         Self {
             token_stream,
             token_buffer: None,
             token_storage: None,
+            source_name,
         }
     }
 
@@ -39,7 +41,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn source_name(&self) -> &str {
-        self.token_stream.source_name()
+        self.source_name.as_str()
     }
 
     /// grab next token with confidence

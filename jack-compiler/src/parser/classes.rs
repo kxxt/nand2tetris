@@ -1,10 +1,10 @@
 use super::{unexpected_token, Parser};
-use crate::ast::*;
+use crate::{ast::*, tokenizer::TokenResult};
 use crate::errors::ParserError;
 use crate::token::*;
 use anyhow::{Ok, Result};
 
-impl<'a> Parser<'a> {
+impl<I: Iterator<Item = TokenResult>> Parser<I> {
     pub(super) fn parse_class(&mut self) -> Result<ClassNode> {
         let token = self.next_token()?;
         if token.kind != TokenKind::Keyword || token.value != "class" {

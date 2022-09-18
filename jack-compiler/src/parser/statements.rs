@@ -1,9 +1,10 @@
 use super::Parser;
 use crate::ast::*;
 use crate::token::*;
+use crate::tokenizer::TokenResult;
 use anyhow::Result;
 
-impl<'a> Parser<'a> {
+impl<I: Iterator<Item = TokenResult>> Parser<I> {
     pub(super) fn parse_statements(&mut self) -> Result<NodeCollection<StatementNode>> {
         let mut list: Vec<StatementNode> = NodeCollection::new();
         while let Some(TokenRef {

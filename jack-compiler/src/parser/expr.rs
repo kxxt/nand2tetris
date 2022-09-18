@@ -2,9 +2,10 @@ use super::{unexpected_token, Parser};
 use crate::ast::*;
 use crate::errors::ParserError;
 use crate::token::*;
+use crate::tokenizer::TokenResult;
 use anyhow::Result;
 
-impl<'a> Parser<'a> {
+impl<I: Iterator<Item = TokenResult>> Parser<I> {
     pub(super) fn parse_expression(&mut self) -> Result<ExpressionNode> {
         let term = self.parse_term()?;
         let mut parts = NodeCollection::new();

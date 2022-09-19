@@ -175,12 +175,21 @@ test_parser!(
                                 TermNode::Parentheses(
                                     Rc::new(n_e!(-Rc::new(n_t!(j))))
                                 )
-                            )}
-                        }}
+                            )},
+                            {let j = n_binop!(
+                                n_t!(j), Divide, TermNode::Parentheses(
+                                    Rc::new(n_e!(-Rc::new(n_int_t!(2))))
+                                )
+                            )},
+                            {let i = n_binop!(n_t!(i), Or, n_t!(j))}
+                        }},
+                        {return}
                     ]
                 }
             }
         ],
-        vec![]
+        n_class_vars! {
+            Static boolean test;
+        }
     )
 );

@@ -44,7 +44,9 @@ impl<I: Iterator<Item = TokenResult>> Parser<I> {
         self.eat_symbol("{")?;
         let statements = self.parse_statements()?;
         self.eat_symbol("}")?;
-        let else_node = if self.look_ahead_for_symbol("else")? {
+        let else_node = if self.peek()?.is_some_and(
+            |t| t.kind == TokenKind::Keyword && t.value == "else"
+        ) {
             self.eat()?;
             self.eat_symbol("{")?;
             let statements = self.parse_statements()?;

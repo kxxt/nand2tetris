@@ -14,6 +14,7 @@ The assembler and VM translator are written in Rust.
 
 - `assembler`: The assembler for Hack Assembly language.
 - `jack-vm-translator`: VM Translator.
+- `jack-compiler`: (WIP) Compiler for Jack language.
 - `projects`, `tools`: Homework
 
 ## Notice

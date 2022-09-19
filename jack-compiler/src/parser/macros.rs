@@ -132,13 +132,13 @@ macro_rules! n_t {
     (- $e:expr) => {
         UnaryOperationNode {
             operator: UnaryOperator::ArthemiticNegation,
-            subject: $e
+            subject: Rc::new($e)
         }.into()
     };
     (~ $e:expr) => {
         UnaryOperationNode {
             operator: UnaryOperator::LogicalNegation,
-            subject: $e
+            subject: Rc::new($e)
         }.into()
     };
     ($name:ident ($($t:tt)*)) => {
@@ -237,7 +237,7 @@ macro_rules! n_statements {
             condition: $e,
             statements: n_statements!($($s)*),
             else_node: None
-        }
+        }.into()
     };
     (@cmd {if ($e:expr) {$($s:tt)*} else {$($t:tt)*}}) => {
         IfElseNode {
@@ -288,7 +288,16 @@ macro_rules! n_subroutine {
             body: SubroutineBody {
                 variables: n_vars!{ $($v)* },
                 statements: n_statements!($($s)*)
-
+            }
+        }
+    };
+    ($kind:ident $ret:ident $name:ident ($($type:ident $param:ident),*) {
+        $($s:tt)*
+    }) => {
+        n_subroutine!{
+            $kind $ret $name($($type $param),*) {
+                variables: {},
+                statements: [ $($s)* ]
             }
         }
     };

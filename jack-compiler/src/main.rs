@@ -1,4 +1,5 @@
 #![feature(is_some_with)]
+#![ allow( dead_code, unused_imports ) ]
 mod ast;
 mod cli;
 mod parser;

@@ -67,11 +67,11 @@ class Main {
 "###,
     n_class!(
         "Main",
-        vec![n_subroutine! {Function Void main() {
+        vec![n_subroutine! {Function void main() {
             variables: {
                 Array a;
-                Int length;
-                Int i, sum;
+                int length;
+                int i, sum;
             },
             statements: [
                 {let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
@@ -155,9 +155,9 @@ test_parser!(
         }
     },
     n_subroutine! {
-        Function Void more() {
+        Function void more() {
             variables: {
-                Int i,j;
+                int i,j;
                 String s;
                 Array a;
             },

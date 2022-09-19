@@ -42,13 +42,13 @@ macro_rules! n_class_vars {
 pub(super) use n_class_vars;
 
 macro_rules! n_type {
-    (Int) => {
+    (int) => {
         TypeNode::Int
     };
-    (Char) => {
+    (char) => {
         TypeNode::Char
     };
-    (Boolean) => {
+    (boolean) => {
         TypeNode::Boolean
     };
     ($t:ident) => {
@@ -59,16 +59,16 @@ macro_rules! n_type {
 pub(super) use n_type;
 
 macro_rules! n_ret_type {
-    (Int) => {
+    (int) => {
         Some(TypeNode::Int)
     };
-    (Char) => {
+    (char) => {
         Some(TypeNode::Char)
     };
-    (Boolean) => {
+    (boolean) => {
         Some(TypeNode::Boolean)
     };
-    (Void) => {
+    (void) => {
         None
     };
     ($t:ident) => {

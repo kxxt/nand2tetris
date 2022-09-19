@@ -58,26 +58,6 @@ macro_rules! n_type {
 
 pub(super) use n_type;
 
-macro_rules! n_ret_type {
-    (int) => {
-        Some(TypeNode::Int)
-    };
-    (char) => {
-        Some(TypeNode::Char)
-    };
-    (boolean) => {
-        Some(TypeNode::Boolean)
-    };
-    (void) => {
-        None
-    };
-    ($t:ident) => {
-        Some(TypeNode::Class(stringify!($t).to_string().into()))
-    };
-}
-
-pub(super) use n_ret_type;
-
 macro_rules! n_vars {
     ($($type:ident $($val:ident),+;)*) => {
         vec![
@@ -104,15 +84,63 @@ macro_rules! n_expr {
 
 pub(super) use n_expr;
 
-macro_rules! n_call {
-   ($($t:tt)*) => {
-        n_expr!(n_call_t!($($t)*))
-   }
+macro_rules! n_string {
+    ($e:expr) => {
+        n_expr!(n_string_t!($e))
+    };
 }
 
-pub(super) use n_call;
+pub(super) use n_string;
 
-macro_rules! n_call_t {
+macro_rules! n_string_t {
+    ($e:expr) => {
+        TermNode::StringConstant($e.to_string())
+    };
+}
+
+pub(super) use n_string_t;
+
+macro_rules! n_int {
+    ($e:expr) => {
+        n_expr!(n_int_t!($e))
+    };
+}
+
+pub(super) use n_int;
+
+macro_rules! n_int_t {
+    ($e:expr) => {
+        TermNode::IntegerConstant($e as u16)
+    };
+}
+
+pub(super) use n_int_t;
+
+macro_rules! n_t {
+    (this) => {
+        KeywordConstant::This.into()
+    };
+    (null) => {
+        KeywordConstant::Null.into()
+    };
+    (true) => {
+        KeywordConstant::True.into()
+    };
+    (false) => {
+        KeywordConstant::False.into()
+    };
+    (- $e:expr) => {
+        UnaryOperationNode {
+            operator: UnaryOperator::ArthemiticNegation,
+            subject: $e
+        }.into()
+    };
+    (~ $e:expr) => {
+        UnaryOperationNode {
+            operator: UnaryOperator::LogicalNegation,
+            subject: $e
+        }.into()
+    };
     ($name:ident ($($t:tt)*)) => {
         SubroutineCallNode {
             this: None,
@@ -129,59 +157,6 @@ macro_rules! n_call_t {
         }
         .into()
     };
-}
-
-pub(super) use n_call_t;
-
-macro_rules! n_string {
-    ($e:expr) => {
-        ExpressionNode {
-            term: Rc::new($e.to_string().into()),
-            parts: vec![],
-        }
-    };
-}
-
-pub(super) use n_string;
-
-macro_rules! n_string_t {
-    ($e:expr) => {
-        TermNode::StringConstant($e.to_string())
-    };
-}
-
-pub(super) use n_string_t;
-
-macro_rules! n_int {
-    ($e:expr) => {
-        ExpressionNode {
-            term: Rc::new(($e as u16).into()),
-            parts: vec![],
-        }
-    };
-}
-
-pub(super) use n_int;
-
-macro_rules! n_int_t {
-    ($e:expr) => {
-        TermNode::IntegerConstant($e as u16)
-    };
-}
-
-pub(super) use n_int_t;
-
-macro_rules! n_var {
-    ($e:ident) => {
-        ExpressionNode {
-            term: Rc::new(IdentifierNode::from(stringify!($e).to_string()).into()),
-            parts: vec![],
-        }
-    };
-}
-
-pub(super) use n_var;
-macro_rules! n_var_t {
     ($e:ident) => {
         IdentifierNode::from(stringify!($e).to_string()).into()
     };
@@ -194,36 +169,15 @@ macro_rules! n_var_t {
     };
 }
 
-pub(super) use n_var_t;
+pub(super) use n_t;
 
-macro_rules! n_constant {
-    (This) => {
-        ExpressionNode {
-            term: KeywordConstant::This.into(),
-            parts: vec![],
-        }
-    };
-    (Null) => {
-        ExpressionNode {
-            term: KeywordConstant::Null.into(),
-            parts: vec![],
-        }
-    };
-    (True) => {
-        ExpressionNode {
-            term: KeywordConstant::True.into(),
-            parts: vec![],
-        }
-    };
-    (False) => {
-        ExpressionNode {
-            term: KeywordConstant::False.into(),
-            parts: vec![],
-        }
-    };
+macro_rules! n_e {
+    ($($t:tt)*) => {
+        n_expr!(n_t!($($t)*))
+    }
 }
 
-pub(super) use n_constant;
+pub(super) use n_e;
 
 macro_rules! n_binop {
     ($a:expr, $b:ident, $c:expr) => {
@@ -239,8 +193,8 @@ macro_rules! n_binop {
 
 pub(super) use n_binop;
 
-macro_rules! n_cmd {
-    ({let $name:ident = $e:expr}) => {
+macro_rules! n_statements {
+    (@cmd {let $name:ident = $e:expr}) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: None,
@@ -248,7 +202,7 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    ({let $name:ident [$k:expr] = $t:expr }) => {
+    (@cmd {let $name:ident [$k:expr] = $t:expr }) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: Some($k),
@@ -256,40 +210,45 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    ({while ($c:expr) { $($t:tt)* } }) => {
+    (@cmd {while ($c:expr) { $($t:tt)* } }) => {
         WhileNode {
             condition: $c,
             statements: n_statements!($($t)*)
         }
         .into()
     };
-    ({do $($t:tt)*}) => {
+    (@cmd {do $($t:tt)*}) => {
         DoNode {
-            call: n_call_t!($($t)*)
+            call: n_t!($($t)*)
         }.into()
     };
-    ({return}) => {
+    (@cmd {return}) => {
         ReturnNode{
             value: None,
         }.into()
     };
-    ({return $e:expr}) => {
+    (@cmd {return $e:expr}) => {
         ReturnNode {
             value: Some($e),
         }.into()
     };
-    ({if ()}) => {
-
-    }
-
-}
-
-pub(super) use n_cmd;
-
-macro_rules! n_statements {
+    (@cmd {if ($e:expr) {$($s:tt)*}}) => {
+        IfElseNode {
+            condition: $e,
+            statements: n_statements!($($s)*),
+            else_node: None
+        }
+    };
+    (@cmd {if ($e:expr) {$($s:tt)*} else {$($t:tt)*}}) => {
+        IfElseNode {
+            condition: $e,
+            statements: n_statements!($($s)*),
+            else_node: Some(n_statements!($($t)*))
+        }.into()
+    };
     ($($t:tt),*) => {
         vec![
-            $(n_cmd!($t)),*
+            $(n_statements!(@cmd $t)),*
         ]
     }
 }
@@ -297,13 +256,28 @@ macro_rules! n_statements {
 pub(super) use n_statements;
 
 macro_rules! n_subroutine {
+    (@ret_type int) => {
+        Some(TypeNode::Int)
+    };
+    (@ret_type char) => {
+        Some(TypeNode::Char)
+    };
+    (@ret_type boolean) => {
+        Some(TypeNode::Boolean)
+    };
+    (@ret_type void) => {
+        None
+    };
+    (@ret_type $t:ident) => {
+        Some(TypeNode::Class(stringify!($t).to_string().into()))
+    };
     ($kind:ident $ret:ident $name:ident ($($type:ident $param:ident),*) {
         variables: { $($v:tt)* },
         statements: [ $($s:tt)* ]
     }) => {
         SubroutineDeclarationNode {
             kind: SubroutineKind::$kind,
-            return_type: n_ret_type!($ret),
+            return_type: n_subroutine!(@ret_type $ret),
             name: stringify!($name).to_string().into(),
             parameters: vec![
                 $(ParameterNode {

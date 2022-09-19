@@ -74,25 +74,25 @@ class Main {
                 int i, sum;
             },
             statements: [
-                {let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
-                {let a = n_call!(Array.new(n_var!(length)))},
+                {let length = n_e!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
+                {let a = n_e!(Array.new(n_e!(length)))},
                 {let i = n_int!(0)},
                 {while (n_binop!(
-                    n_var_t!(i), LessThan, n_var_t!(length)
+                    n_t!(i), LessThan, n_t!(length)
                 )) {
-                    {let a[n_var!(i)] = n_call!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))},
-                    {let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                    {let a[n_e!(i)] = n_e!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))},
+                    {let i = n_binop!(n_t!(i), Plus, n_int_t!(1))}
                 }},
                 {let i = n_int!(0)},
                 {let sum = n_int!(0)},
                 {while (n_binop!(
-                    n_var_t!(i), LessThan, n_var_t!(length)
+                    n_t!(i), LessThan, n_t!(length)
                 )) {
-                    {let sum = n_binop!(n_var_t!(sum), Plus, n_var_t!(a[n_var!(i)]))},
-                    {let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                    {let sum = n_binop!(n_t!(sum), Plus, n_t!(a[n_e!(i)]))},
+                    {let i = n_binop!(n_t!(i), Plus, n_int_t!(1))}
                 }},
                 {do Output.printString(n_string!("THE AVERAGE IS: "))},
-                {do Output.printInt(n_binop!(n_var_t!(sum), Divide, n_var_t!(length)))},
+                {do Output.printInt(n_binop!(n_t!(sum), Divide, n_t!(length)))},
                 {do Output.println()},
                 {return}
             ]
@@ -140,29 +140,47 @@ test_parser!(
         }
     }
     "###,
-    n_class!("Main", vec![
-        n_subroutine! {
-        Function Void main() {
-            variables: {
-                SquareGame game;
+    n_class!(
+        "Main",
+        vec![
+            n_subroutine! {
+                Function void main() {
+                    variables: {
+                        SquareGame game;
+                    },
+                    statements: [
+                        {let game = n_e!(SquareGame.new())},
+                        {do game.run()},
+                        {do game.dispose()},
+                        {return}
+                    ]
+                }
             },
-            statements: [
-                {let game = n_call!(SquareGame.new())},
-                {do game.run()},
-                {do game.dispose()},
-                {return}
-            ]
-        }
-    },
-    n_subroutine! {
-        Function void more() {
-            variables: {
-                int i,j;
-                String s;
-                Array a;
-            },
-            statements: []
-        }
-    }
-    ], vec![])
+            n_subroutine! {
+                Function void more() {
+                    variables: {
+                        int i,j;
+                        String s;
+                        Array a;
+                    },
+                    statements: [
+                        {if (n_e!(false)) {
+                            {let s = n_string!("string constant")},
+                            {let s = n_e!(null)},
+                            {let a[n_int!(1)] = n_e!(a[n_int!(2)])}
+                        } else {
+                            {let i = n_binop!(
+                                n_t!(i),
+                                Multiply,
+                                TermNode::Parentheses(
+                                    Rc::new(n_e!(-Rc::new(n_t!(j))))
+                                )
+                            )}
+                        }}
+                    ]
+                }
+            }
+        ],
+        vec![]
+    )
 );

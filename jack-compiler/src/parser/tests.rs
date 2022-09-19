@@ -362,3 +362,10 @@ test_parser!(
         }
     )
 );
+
+test_parser!(
+    test_square_square,
+    "Square",
+    r##""##,
+    n_class!("Square", vec![], n_class_vars! {})
+);

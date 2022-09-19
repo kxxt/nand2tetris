@@ -240,7 +240,7 @@ macro_rules! n_binop {
 pub(super) use n_binop;
 
 macro_rules! n_cmd {
-    ({Let $name:ident = $e:expr}) => {
+    ({let $name:ident = $e:expr}) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: None,
@@ -248,7 +248,7 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    ({Let $name:ident [$k:expr] = $t:expr }) => {
+    ({let $name:ident [$k:expr] = $t:expr }) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: Some($k),
@@ -256,28 +256,32 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    ({While ($c:expr) { $($t:tt)* } }) => {
+    ({while ($c:expr) { $($t:tt)* } }) => {
         WhileNode {
             condition: $c,
             statements: n_statements!($($t)*)
         }
         .into()
     };
-    ({Do $($t:tt)*}) => {
+    ({do $($t:tt)*}) => {
         DoNode {
             call: n_call_t!($($t)*)
         }.into()
     };
-    ({Return}) => {
+    ({return}) => {
         ReturnNode{
             value: None,
         }.into()
     };
-    ({Return $e:expr}) => {
+    ({return $e:expr}) => {
         ReturnNode {
             value: Some($e),
         }.into()
+    };
+    ({if ()}) => {
+
     }
+
 }
 
 pub(super) use n_cmd;

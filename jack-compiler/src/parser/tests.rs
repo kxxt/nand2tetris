@@ -24,7 +24,7 @@ macro_rules! test_parser {
 }
 
 test_parser!(
-    parser_array_test,
+    test_array_test,
     "Main",
     r###"// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -67,35 +67,102 @@ class Main {
 "###,
     n_class!(
         "Main",
-        vec![n_subroutine!(Function Void main() {
+        vec![n_subroutine! {Function Void main() {
             variables: {
                 Array a;
                 Int length;
                 Int i, sum;
             },
             statements: [
-                {Let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
-                {Let a = n_call!(Array.new(n_var!(length)))},
-                {Let i = n_int!(0)},
-                {While (n_binop!(
+                {let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
+                {let a = n_call!(Array.new(n_var!(length)))},
+                {let i = n_int!(0)},
+                {while (n_binop!(
                     n_var_t!(i), LessThan, n_var_t!(length)
                 )) {
-                    {Let a[n_var!(i)] = n_call!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))},
-                    {Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                    {let a[n_var!(i)] = n_call!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))},
+                    {let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
                 }},
-                {Let i = n_int!(0)},
-                {Let sum = n_int!(0)},
-                {While (n_binop!(
+                {let i = n_int!(0)},
+                {let sum = n_int!(0)},
+                {while (n_binop!(
                     n_var_t!(i), LessThan, n_var_t!(length)
                 )) {
-                    {Let sum = n_binop!(n_var_t!(sum), Plus, n_var_t!(a[n_var!(i)]))},
-                    {Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                    {let sum = n_binop!(n_var_t!(sum), Plus, n_var_t!(a[n_var!(i)]))},
+                    {let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
                 }},
-                {Do Output.printString(n_string!("THE AVERAGE IS: "))},
-                {Do Output.printInt(n_binop!(n_var_t!(sum), Divide, n_var_t!(length)))},
-                {Do Output.println()},
-                {Return}
+                {do Output.printString(n_string!("THE AVERAGE IS: "))},
+                {do Output.printInt(n_binop!(n_var_t!(sum), Divide, n_var_t!(length)))},
+                {do Output.println()},
+                {return}
             ]
-        })]
+        }}]
     )
+);
+
+test_parser!(
+    test_square_main,
+    "Main",
+    r###"// This file is part of www.nand2tetris.org
+    // and the book "The Elements of Computing Systems"
+    // by Nisan and Schocken, MIT Press.
+    // File name: projects/10/Square/Main.jack
+    
+    // (derived from projects/09/Square/Main.jack, with testing additions)
+    
+    /** Initializes a new Square Dance game and starts running it. */
+    class Main {
+        static boolean test;    // Added for testing -- there is no static keyword
+                                // in the Square files.
+        function void main() {
+          var SquareGame game;
+          let game = SquareGame.new();
+          do game.run();
+          do game.dispose();
+          return;
+        }
+    
+        function void more() {  // Added to test Jack syntax that is not used in
+            var int i, j;       // the Square files.
+            var String s;
+            var Array a;
+            if (false) {
+                let s = "string constant";
+                let s = null;
+                let a[1] = a[2];
+            }
+            else {              // There is no else keyword in the Square files.
+                let i = i * (-j);
+                let j = j / (-2);   // note: unary negate constant 2
+                let i = i | j;
+            }
+            return;
+        }
+    }
+    "###,
+    n_class!("Main", vec![
+        n_subroutine! {
+        Function Void main() {
+            variables: {
+                SquareGame game;
+            },
+            statements: [
+                {let game = n_call!(SquareGame.new())},
+                {do game.run()},
+                {do game.dispose()},
+                {return}
+            ]
+        }
+    },
+    n_subroutine! {
+        Function Void more() {
+            variables: {
+                Int i,j;
+                String s;
+                Array a;
+            },
+            statements: []
+        }
+    }
+    ], vec![])
 );

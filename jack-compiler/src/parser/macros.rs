@@ -240,7 +240,7 @@ macro_rules! n_binop {
 pub(super) use n_binop;
 
 macro_rules! n_cmd {
-    (Let $name:ident = $e:expr) => {
+    ({Let $name:ident = $e:expr}) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: None,
@@ -248,7 +248,7 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    (Let $name:ident [$k:expr] = $t:expr ) => {
+    ({Let $name:ident [$k:expr] = $t:expr }) => {
         LetNode {
             name: stringify!($name).to_string().into(),
             index: Some($k),
@@ -256,26 +256,24 @@ macro_rules! n_cmd {
         }
         .into()
     };
-    (While ($c:expr) { $($t:tt)* } ) => {
+    ({While ($c:expr) { $($t:tt)* } }) => {
         WhileNode {
             condition: $c,
-            statements: vec![
-                $($t)*
-            ],
+            statements: n_statements!($($t)*)
         }
         .into()
     };
-    (Do $($t:tt)*) => {
+    ({Do $($t:tt)*}) => {
         DoNode {
             call: n_call_t!($($t)*)
         }.into()
     };
-    (Return) => {
+    ({Return}) => {
         ReturnNode{
             value: None,
         }.into()
     };
-    (Return $e:expr) => {
+    ({Return $e:expr}) => {
         ReturnNode {
             value: Some($e),
         }.into()
@@ -284,9 +282,19 @@ macro_rules! n_cmd {
 
 pub(super) use n_cmd;
 
+macro_rules! n_statements {
+    ($($t:tt),*) => {
+        vec![
+            $(n_cmd!($t)),*
+        ]
+    }
+}
+
+pub(super) use n_statements;
+
 macro_rules! n_subroutine {
     ($kind:ident $ret:ident $name:ident ($($type:ident $param:ident),*) {
-        variables: { $($v:tt)* }, 
+        variables: { $($v:tt)* },
         statements: [ $($s:tt)* ]
     }) => {
         SubroutineDeclarationNode {
@@ -301,9 +309,8 @@ macro_rules! n_subroutine {
             ],
             body: SubroutineBody {
                 variables: n_vars!{ $($v)* },
-                statements: vec![
-                    $($s)*
-                ]
+                statements: n_statements!($($s)*)
+
             }
         }
     };

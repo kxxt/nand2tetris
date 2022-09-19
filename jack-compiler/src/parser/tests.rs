@@ -68,33 +68,33 @@ class Main {
     n_class!(
         "Main",
         vec![n_subroutine!(Function Void main() {
-            variables: n_vars!{
+            variables: {
                 Array a;
                 Int length;
                 Int i, sum;
             },
-            statements: vec![
-                n_cmd!(Let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))),
-                n_cmd!(Let a = n_call!(Array.new(n_var!(length)))),
-                n_cmd!(Let i = n_int!(0)),
-                n_cmd!(While (n_binop!(
+            statements: [
+                {Let length = n_call!(Keyboard.readInt(n_string!("HOW MANY NUMBERS? ")))},
+                {Let a = n_call!(Array.new(n_var!(length)))},
+                {Let i = n_int!(0)},
+                {While (n_binop!(
                     n_var_t!(i), LessThan, n_var_t!(length)
                 )) {
-                    n_cmd!(Let a[n_var!(i)] = n_call!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))),
-                    n_cmd!(Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1)))
-                }),
-                n_cmd!(Let i = n_int!(0)),
-                n_cmd!(Let sum = n_int!(0)),
-                n_cmd!(While (n_binop!(
+                    {Let a[n_var!(i)] = n_call!(Keyboard.readInt(n_string!("ENTER THE NEXT NUMBER: ")))},
+                    {Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                }},
+                {Let i = n_int!(0)},
+                {Let sum = n_int!(0)},
+                {While (n_binop!(
                     n_var_t!(i), LessThan, n_var_t!(length)
                 )) {
-                    n_cmd!(Let sum = n_binop!(n_var_t!(sum), Plus, n_var_t!(a[n_var!(i)]))),
-                    n_cmd!(Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1)))
-                }),
-                n_cmd!(Do Output.printString(n_string!("THE AVERAGE IS: "))),
-                n_cmd!(Do Output.printInt(n_binop!(n_var_t!(sum), Divide, n_var_t!(length)))),
-                n_cmd!(Do Output.println()),
-                n_cmd!(Return)
+                    {Let sum = n_binop!(n_var_t!(sum), Plus, n_var_t!(a[n_var!(i)]))},
+                    {Let i = n_binop!(n_var_t!(i), Plus, n_int_t!(1))}
+                }},
+                {Do Output.printString(n_string!("THE AVERAGE IS: "))},
+                {Do Output.printInt(n_binop!(n_var_t!(sum), Divide, n_var_t!(length)))},
+                {Do Output.println()},
+                {Return}
             ]
         })]
     )

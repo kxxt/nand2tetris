@@ -27,4 +27,7 @@ pub enum TokenizerError {
 }
 
 #[derive(Error, Debug)]
-pub enum EmitterError {}
+pub enum EmitterError {
+    #[error("not in a subroutine")]
+    NotInASubroutine
+}

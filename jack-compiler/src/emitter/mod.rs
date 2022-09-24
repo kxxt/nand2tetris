@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{ast::*, compiler::VMCode};
+use crate::{ast::*, compiler::VMCode, errors::EmitterError};
 use anyhow::Result;
 
 use self::{
@@ -31,7 +31,7 @@ impl Emitter {
     pub fn emit(&mut self, ast: AST) -> Result<VMCode> {
         let mut code = String::new();
         for ele in ast.variables {
-            self.emit_class_var(ele);
+            self.handle_class_var(ele);
         }
         Ok(code)
     }
@@ -56,7 +56,7 @@ impl Emitter {
         self.field_counter
     }
 
-    fn emit_class_var(&mut self, class_var: ClassVariableDeclarationNode) {
+    fn handle_class_var(&mut self, class_var: ClassVariableDeclarationNode) {
         for name in class_var.variables.names {
             let info = ClassVariableInfo {
                 kind: class_var.kind,
@@ -69,6 +69,26 @@ impl Emitter {
             };
             self.root_table.insert(name.0, info);
         }
+    }
+
+    fn handle_var(&mut self, var: VariableDeclarationNode) -> Result<()> {
+        if self.subroutine_table.is_none() {
+            return Err(EmitterError::NotInASubroutine.into());
+        }
+        let mut cnt = 0u16;
+        for name in var.names {
+            let info = VariableInfo {
+                r#type: var.r#type.clone(),
+                segment: Segment::Local,
+                index: {
+                    let temp = cnt;
+                    cnt += 1;
+                    temp
+                },
+            };
+            self.subroutine_table.as_mut().unwrap().insert(name.0, info);
+        }
+        Ok(())
     }
 
     fn emit_statement(&mut self, statement: StatementNode) -> VMCode {

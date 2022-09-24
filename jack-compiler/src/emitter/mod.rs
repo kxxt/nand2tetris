@@ -55,23 +55,20 @@ impl Emitter {
         self.field_counter += 1;
         self.field_counter
     }
-    
+
     fn emit_class_var(&mut self, class_var: ClassVariableDeclarationNode) {
-        self.root_table
-            .extend(class_var.variables.names.into_iter().map(|name| {
-                (
-                    name.0,
-                    ClassVariableInfo {
-                        kind: class_var.kind,
-                        r#type: class_var.variables.r#type,
-                        index: if class_var.kind == ClassVariableKind::Static {
-                            self.advance_static_counter()
-                        } else {
-                            self.advance_field_counter()
-                        },
-                    },
-                )
-            }));
+        for name in class_var.variables.names {
+            let info = ClassVariableInfo {
+                kind: class_var.kind,
+                r#type: class_var.variables.r#type.clone(),
+                index: if class_var.kind == ClassVariableKind::Static {
+                    self.advance_static_counter()
+                } else {
+                    self.advance_field_counter()
+                },
+            };
+            self.root_table.insert(name.0, info);
+        }
     }
 
     fn emit_statement(&mut self, statement: StatementNode) -> VMCode {

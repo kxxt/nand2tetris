@@ -2,7 +2,7 @@ use super::kinds::*;
 use super::statements::*;
 use super::NodeCollection;
 
-#[derive(Debug, derive_more::From, PartialEq)]
+#[derive(Debug, derive_more::From, PartialEq, Clone)]
 pub struct IdentifierNode(pub(crate) String);
 #[derive(Debug, PartialEq)]
 
@@ -27,7 +27,7 @@ pub struct SubroutineDeclarationNode {
     pub(crate) body: SubroutineBody,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TypeNode {
     Int,
     Char,

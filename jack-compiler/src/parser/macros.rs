@@ -76,7 +76,7 @@ pub(super) use n_vars;
 macro_rules! n_expr {
     ($e:expr) => {
         ExpressionNode {
-            term: Rc::new($e),
+            term: Box::new($e),
             parts: vec![],
         }
     };
@@ -132,13 +132,13 @@ macro_rules! n_t {
     (- $e:expr) => {
         UnaryOperationNode {
             operator: UnaryOperator::ArthemiticNegation,
-            subject: Rc::new($e)
+            subject: Box::new($e)
         }.into()
     };
     (~ $e:expr) => {
         UnaryOperationNode {
             operator: UnaryOperator::LogicalNegation,
-            subject: Rc::new($e)
+            subject: Box::new($e)
         }.into()
     };
     ($name:ident ($($t:tt)*)) => {
@@ -182,10 +182,10 @@ pub(super) use n_e;
 macro_rules! n_binop {
     ($a:expr, $b:ident, $c:expr) => {
         ExpressionNode {
-            term: Rc::new($a),
+            term: Box::new($a),
             parts: vec![ExpressionPart {
                 operator: BinaryOperator::$b,
-                term: Rc::new($c),
+                term: Box::new($c),
             }],
         }
     };

@@ -6,7 +6,6 @@ use crate::{
     tokenizer::{Source, Tokenizer},
 };
 use pretty_assertions::assert_eq;
-use std::rc::Rc;
 
 macro_rules! test_parser {
     ($name:ident, $source_name:expr, $source:expr, $output:expr) => {
@@ -174,12 +173,12 @@ test_parser!(
                                 n_t!(i),
                                 Multiply,
                                 TermNode::Parentheses(
-                                    Rc::new(n_e!(-n_t!(j)))
+                                    Box::new(n_e!(-n_t!(j)))
                                 )
                             )},
                             {let j = n_binop!(
                                 n_t!(j), Divide, TermNode::Parentheses(
-                                    Rc::new(n_e!(-n_int_t!(2)))
+                                    Box::new(n_e!(-n_int_t!(2)))
                                 )
                             )},
                             {let i = n_binop!(n_t!(i), Or, n_t!(j))}
@@ -346,7 +345,7 @@ test_parser!(
                                 {let direction = n_int!(4)}
                             }},
                             {while (n_e!(~TermNode::Parentheses(
-                                Rc::new(n_binop!(n_t!(key), Equal, n_int_t!(0)))
+                                Box::new(n_binop!(n_t!(key), Equal, n_int_t!(0)))
                             ))) {
                                 {let key = n_e!(Keyboard.keyPressed())},
                                 {do moveSquare()}
@@ -514,17 +513,17 @@ test_parser!(
                 Method void incSize() {
                     {if (
                         n_binop!(
-                            TermNode::Parentheses(Rc::new(n_binop!(
+                            TermNode::Parentheses(Box::new(n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(
+                                    Box::new(
                                         n_binop!(n_t!(y), Plus, n_t!(size))
                                     )
                                 ),LessThan,n_int_t!(254)
                             ))),
                             And,
-                            TermNode::Parentheses(Rc::new(n_binop!(
+                            TermNode::Parentheses(Box::new(n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(
+                                    Box::new(
                                         n_binop!(n_t!(x), Plus, n_t!(size))
                                     )
                                 ),LessThan,n_int_t!(510)
@@ -562,7 +561,7 @@ test_parser!(
                             n_e!(x),
                             n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(n_binop!(
+                                    Box::new(n_binop!(
                                         n_t!(y),Plus,n_t!(size)
                                     ))
                                 ),
@@ -586,7 +585,7 @@ test_parser!(
                 Method void moveDown() {
                     {if (n_binop!(
                         TermNode::Parentheses(
-                            Rc::new(n_binop!(
+                            Box::new(n_binop!(
                                 n_t!(y), Plus, n_t!(size)
                             ))
                         ), LessThan, n_int_t!(254)
@@ -602,7 +601,7 @@ test_parser!(
                             n_e!(x),
                             n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(n_binop!(
+                                    Box::new(n_binop!(
                                         n_t!(y), Plus, n_t!(size)
                                     ))
                                 ),
@@ -625,7 +624,7 @@ test_parser!(
                         {do Screen.drawRectangle(
                             n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(n_binop!(
+                                    Box::new(n_binop!(
                                         n_t!(x),Plus,n_t!(size)
                                     ))
                                 ),
@@ -650,7 +649,7 @@ test_parser!(
                 Method void moveRight() {
                     {if (n_binop!(
                         TermNode::Parentheses(
-                            Rc::new(n_binop!(
+                            Box::new(n_binop!(
                                 n_t!(x), Plus, n_t!(size)
                             ))
                         ), LessThan, n_int_t!(510)
@@ -665,7 +664,7 @@ test_parser!(
                         {do Screen.drawRectangle(
                             n_binop!(
                                 TermNode::Parentheses(
-                                    Rc::new(n_binop!(
+                                    Box::new(n_binop!(
                                         n_t!(x), Plus, n_t!(size)
                                     ))
                                 ),

@@ -153,13 +153,18 @@ impl Emitter {
         let mut r#type = self.class_name.as_ref().unwrap();
         let mut arg_len = arguments.len();
         if let Some(this) = this {
-            arg_len += 1;
-            let info = self.lookup_var(&this.0)?;
-            write!(code, "\npush {} {}", info.segment, info.index)?;
-            if let TypeNode::Class(c) = &info.r#type {
-                r#type = &c.0;
+            if let Ok(info) = self.lookup_var(&this.0) {
+                // look up for variable
+                arg_len += 1;
+                write!(code, "\npush {} {}", info.segment, info.index)?;
+                if let TypeNode::Class(c) = &info.r#type {
+                    r#type = &c.0;
+                } else {
+                    return Err(EmitterError::UnexpectedPrimitiveType(info.r#type.clone()).into());
+                }
             } else {
-                return Err(EmitterError::UnexpectedPrimitiveType(info.r#type.clone()).into());
+                // variable not found. pretend it is a type
+                r#type = &this.0;
             }
         }
         for arg in arguments {

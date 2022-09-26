@@ -34,4 +34,6 @@ pub enum EmitterError {
     VariableNotFound(String),
     #[error("unexpected primitive type \"{0:?}\"")]
     UnexpectedPrimitiveType(TypeNode),
+    #[error("expected type \"{0:?}\", found type \"{1:?}\"")]
+    MismatchedType(Option<TypeNode>, Option<TypeNode>),
 }

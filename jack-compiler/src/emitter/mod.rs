@@ -80,11 +80,11 @@ impl Emitter {
         }
     }
 
-    fn handle_var(&mut self, var: VariableDeclarationNode, mut cnt: u16) -> Result<u16> {
+    fn handle_var(&mut self, var: &VariableDeclarationNode, mut cnt: u16) -> Result<u16> {
         if self.subroutine_table.is_none() {
             return Err(EmitterError::NotInASubroutine.into());
         }
-        for name in var.names {
+        for name in &var.names {
             let info = VariableInfo {
                 r#type: var.r#type.clone(),
                 segment: Segment::Local,
@@ -94,7 +94,10 @@ impl Emitter {
                     temp
                 },
             };
-            self.subroutine_table.as_mut().unwrap().insert(name.0, info);
+            self.subroutine_table
+                .as_mut()
+                .unwrap()
+                .insert(name.0.clone(), info);
         }
         Ok(cnt)
     }
@@ -105,6 +108,42 @@ impl Emitter {
             .and_then(|map| map.get(name))
             .or_else(|| self.root_table.get(name))
             .ok_or_else(|| EmitterError::VariableNotFound(name.to_string()).into())
+    }
+
+    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
+        let SubroutineDeclarationNode {
+            kind,
+            return_type,
+            name,
+            parameters,
+            body,
+        } = ctor;
+        // handle variables
+        self.subroutine_table = Some(HashMap::new());
+        let mut cnt = 0;
+        for var in &body.variables {
+            cnt = self.handle_var(var, cnt)?;
+        }
+        // checks
+        assert_eq!(kind, &SubroutineKind::Constructor);
+        let class_name = self.class_name.as_ref().unwrap();
+        let expected = Some(TypeNode::Class(class_name.clone().into()));
+        if return_type != &expected {
+            return Err(EmitterError::MismatchedType(expected, return_type.clone()).into());
+        }
+        // format VMCode
+        let name = &name.0;
+        let var_cnt = body.variables.len();
+        let arg_cnt = parameters.len();
+        let mut code = format!(
+            r#"
+function {class_name}.{name} {var_cnt}
+push constant {arg_cnt}"
+call Memory.alloc 1
+pop pointer 0"#
+        );
+        write!(code, "{}", self.emit_statements(&body.statements)?)?;
+        Ok(code)
     }
 
     fn emit_subroutine(&mut self, routine: SubroutineDeclarationNode) -> Result<VMCode> {
@@ -126,7 +165,10 @@ impl Emitter {
                     }
                 )
             }
-            TermNode::Variable(v) => todo!(),
+            TermNode::Variable(v) => {
+                let VariableInfo { segment, index, .. } = self.lookup_var(&v.0)?;
+                format!("\npush {} {}", segment, index)
+            }
             TermNode::Parentheses(expr) => self.emit_expr(&expr)?,
             TermNode::SubroutineCall(call) => self.emit_call(call)?,
             TermNode::UnaryOperation(op) => format!(

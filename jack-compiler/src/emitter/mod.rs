@@ -13,6 +13,7 @@ pub struct Emitter {
     root_table: HashMap<String, VariableInfo>,
     static_counter: u16,
     field_counter: u16,
+    label_counter: u16,
     subroutine_table: Option<HashMap<String, VariableInfo>>,
     subroutines: HashMap<String, SubroutineKind>,
 }
@@ -23,6 +24,7 @@ impl Emitter {
             root_table: HashMap::new(),
             static_counter: 0,
             field_counter: 0,
+            label_counter: 0,
             subroutine_table: None,
             subroutines: HashMap::new(),
             class_name: None,
@@ -31,6 +33,7 @@ impl Emitter {
 
     pub fn emit(&mut self, ast: AST) -> Result<VMCode> {
         let mut code = String::new();
+        self.class_name = Some(ast.name.0);
         for ele in ast.variables {
             self.handle_class_var(ele);
         }
@@ -47,6 +50,16 @@ impl Emitter {
         let temp = self.field_counter;
         self.field_counter += 1;
         self.field_counter
+    }
+
+    fn next_label(&mut self) -> String {
+        let label = format!(
+            "{}.LABEL.{}",
+            self.class_name.as_ref().unwrap(),
+            self.label_counter
+        );
+        self.label_counter += 1;
+        label
     }
 
     fn handle_class_var(&mut self, class_var: ClassVariableDeclarationNode) {
@@ -98,8 +111,8 @@ impl Emitter {
         todo!()
     }
 
-    fn emit_term(&self, term: &TermNode) -> VMCode {
-        return match term {
+    fn emit_term(&self, term: &TermNode) -> Result<VMCode> {
+        Ok(match term {
             TermNode::IntegerConstant(i) => format!("\npush {i}"),
             TermNode::StringConstant(s) => Self::emit_string(s.to_string()),
             TermNode::KeywordConstant(v) => {
@@ -114,20 +127,20 @@ impl Emitter {
                 )
             }
             TermNode::Variable(v) => todo!(),
-            TermNode::Parentheses(expr) => self.emit_expr(&expr),
-            TermNode::SubroutineCall(call) => todo!(),
+            TermNode::Parentheses(expr) => self.emit_expr(&expr)?,
+            TermNode::SubroutineCall(call) => self.emit_call(call)?,
             TermNode::UnaryOperation(op) => format!(
                 r"
 {}
 {}",
-                self.emit_term(&op.subject),
+                self.emit_term(&op.subject)?,
                 match op.operator {
                     UnaryOperator::ArthemiticNegation => "neg",
                     UnaryOperator::LogicalNegation => "not",
                 }
             ),
             TermNode::ArrayElement(ArrayElementNode { name, index }) => todo!(),
-        };
+        })
     }
 
     fn emit_call(&self, call: &SubroutineCallNode) -> Result<VMCode> {
@@ -150,25 +163,25 @@ impl Emitter {
             }
         }
         for arg in arguments {
-            write!(code, "{}", self.emit_expr(arg))?;
+            write!(code, "{}", self.emit_expr(arg)?)?;
         }
         write!(code, "\ncall {}.{} {arg_len}", r#type, &name.0)?;
         Ok(code)
     }
 
-    fn emit_expr(&self, expr: &ExpressionNode) -> VMCode {
+    fn emit_expr(&self, expr: &ExpressionNode) -> Result<VMCode> {
         if expr.parts.len() == 0 {
-            return self.emit_term(&expr.term);
+            return Ok(self.emit_term(&expr.term)?);
         }
-        let mut code = self.emit_term(&expr.term);
+        let mut code = self.emit_term(&expr.term)?;
         let mut iter = expr.parts.iter();
         while let Some(ExpressionPart { operator, term }) = iter.next() {
-            code += &self.emit_term(term);
+            write!(code, "\n{}\n", self.emit_term(term)?)?;
             code += match operator {
                 BinaryOperator::Plus => "add",
                 BinaryOperator::Minus => "sub",
-                BinaryOperator::Multiply => todo!(),
-                BinaryOperator::Divide => todo!(),
+                BinaryOperator::Multiply => "call Math.multiply 2",
+                BinaryOperator::Divide => "call Math.divide 2",
                 BinaryOperator::And => "and",
                 BinaryOperator::Or => "or",
                 BinaryOperator::LessThan => "lt",
@@ -176,20 +189,89 @@ impl Emitter {
                 BinaryOperator::Equal => "eq",
             }
         }
-        code
+        Ok(code)
     }
 
-    fn emit_return(&mut self, node: &ReturnNode) -> VMCode {
+    fn emit_return(&mut self, node: &ReturnNode) -> Result<VMCode> {
         let code = node
             .value
             .as_ref()
             .map(|expr| self.emit_expr(&expr))
+            .transpose()?
             .unwrap_or(String::new());
-        format!("{code}\nreturn")
+        Ok(format!("{code}\nreturn"))
     }
 
-    fn emit_statement(&mut self, statement: StatementNode) -> VMCode {
-        todo!()
+    fn emit_let(&self, node: &LetNode) -> Result<VMCode> {
+        let LetNode { name, index, value } = node;
+        if index.is_none() {
+            let VariableInfo {
+                r#type,
+                segment,
+                index,
+            } = self.lookup_var(&name.0)?;
+            let mut code = self.emit_expr(value)?;
+            write!(code, "\npop {} {}", segment, index)?;
+            Ok(code)
+        } else {
+            todo!()
+        }
+    }
+
+    fn emit_do(&self, node: &DoNode) -> Result<VMCode> {
+        let mut code = self.emit_call(&node.call)?;
+        code += "\npop temp 3";
+        Ok(code)
+    }
+
+    fn emit_if(&mut self, node: &IfElseNode) -> Result<VMCode> {
+        let IfElseNode {
+            condition,
+            statements,
+            else_node,
+        } = node;
+        let mut code = self.emit_expr(condition)?;
+        let label_else = self.next_label();
+        let label_end = self.next_label();
+        let code_if = self.emit_statements(statements)?;
+        let code_else = if let Some(else_statements) = else_node {
+            self.emit_statements(else_statements)?
+        } else {
+            String::new()
+        };
+        write!(
+            code,
+            r#"
+not
+if-goto {label_else}{code_if}
+goto {label_end}
+label {label_else}{code_else}
+label {label_end}"#
+        )?;
+        Ok(code)
+    }
+
+    fn emit_while(&mut self, node: &WhileNode) -> Result<VMCode> {
+        let WhileNode {
+            condition,
+            statements,
+        } = node;
+        let label_cond = self.next_label();
+        let label_end = self.next_label();
+        let cond = self.emit_expr(condition)?;
+        let body = self.emit_statements(statements)?;
+        Ok(format!(
+            r"
+label {label_cond}{cond}
+not
+if-goto {label_end}{body}
+goto {label_cond}
+label {label_end}"
+        ))
+    }
+
+    fn emit_statement(&mut self, statement: StatementNode) -> Result<VMCode> {
+        Ok(todo!())
     }
 
     fn emit_string(string: String) -> VMCode {
@@ -213,5 +295,9 @@ pop temp 5
 {push_chars}
 push temp 5"
         )
+    }
+
+    fn emit_statements(&self, statements: &[StatementNode]) -> Result<VMCode> {
+        todo!()
     }
 }

@@ -14,6 +14,6 @@ impl Compiler {
     pub fn compile(source: Source) -> Result<VMCode, Box<dyn Error>> {
         let token_stream = Tokenizer::stream(&source);
         let ast = Parser::new(token_stream, source.name.to_string()).parse()?;
-        Ok(Emitter::new().emit(ast)?)
+        Ok(Emitter::new().emit(&ast)?)
     }
 }

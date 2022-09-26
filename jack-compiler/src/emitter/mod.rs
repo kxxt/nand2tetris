@@ -31,11 +31,14 @@ impl Emitter {
         }
     }
 
-    pub fn emit(&mut self, ast: AST) -> Result<VMCode> {
+    pub fn emit(&mut self, ast: &AST) -> Result<VMCode> {
         let mut code = String::new();
-        self.class_name = Some(ast.name.0);
-        for ele in ast.variables {
+        self.class_name = Some(ast.name.0.to_string());
+        for ele in &ast.variables {
             self.handle_class_var(ele);
+        }
+        for subroutine in &ast.subroutines {
+            code += &self.emit_subroutine(subroutine)?;
         }
         Ok(code)
     }
@@ -62,8 +65,8 @@ impl Emitter {
         label
     }
 
-    fn handle_class_var(&mut self, class_var: ClassVariableDeclarationNode) {
-        for name in class_var.variables.names {
+    fn handle_class_var(&mut self, class_var: &ClassVariableDeclarationNode) {
+        for name in &class_var.variables.names {
             let info = VariableInfo {
                 segment: match class_var.kind {
                     ClassVariableKind::Field => Segment::This,
@@ -76,7 +79,7 @@ impl Emitter {
                     self.advance_field_counter()
                 },
             };
-            self.root_table.insert(name.0, info);
+            self.root_table.insert(name.0.to_string(), info);
         }
     }
 

@@ -110,7 +110,7 @@ impl Emitter {
             .ok_or_else(|| EmitterError::VariableNotFound(name.to_string()).into())
     }
 
-    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_constructor(&self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -118,12 +118,6 @@ impl Emitter {
             parameters,
             body,
         } = ctor;
-        // handle variables
-        self.subroutine_table = Some(HashMap::new());
-        let mut cnt = 0;
-        for var in &body.variables {
-            cnt = self.handle_var(var, cnt)?;
-        }
         // checks
         assert_eq!(kind, &SubroutineKind::Constructor);
         let class_name = self.class_name.as_ref().unwrap();
@@ -134,11 +128,11 @@ impl Emitter {
         // format VMCode
         let name = &name.0;
         let var_cnt = body.variables.len();
-        let arg_cnt = parameters.len();
+        let fields_cnt = self.field_counter;
         let mut code = format!(
             r#"
 function {class_name}.{name} {var_cnt}
-push constant {arg_cnt}"
+push constant {fields_cnt}"
 call Memory.alloc 1
 pop pointer 0"#
         );
@@ -146,8 +140,75 @@ pop pointer 0"#
         Ok(code)
     }
 
-    fn emit_subroutine(&mut self, routine: SubroutineDeclarationNode) -> Result<VMCode> {
-        todo!()
+    fn emit_function(&self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+        let SubroutineDeclarationNode {
+            kind,
+            return_type,
+            name,
+            parameters,
+            body,
+        } = func;
+        // checks
+        assert_eq!(kind, &SubroutineKind::Function);
+        // format VMCode
+        let var_cnt = body.variables.len();
+        let name = &name.0;
+        let class_name = self.class_name.as_deref().unwrap();
+        let mut code = format!("\nfunction {class_name}.{name} {var_cnt}");
+        write!(code, "{}", self.emit_statements(&body.statements)?)?;
+        Ok(code)
+    }
+
+    fn emit_method(&self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+        let SubroutineDeclarationNode {
+            kind,
+            return_type,
+            name,
+            parameters,
+            body,
+        } = func;
+        // checks
+        assert_eq!(kind, &SubroutineKind::Method);
+        // format VMCode
+        let var_cnt = body.variables.len();
+        let name = &name.0;
+        let class_name = self.class_name.as_deref().unwrap();
+        let mut code = format!(r#"
+function {class_name}.{name} {var_cnt}
+push argument 0
+pop pointer 0"#);
+        write!(code, "{}", self.emit_statements(&body.statements)?)?;
+        Ok(code)
+    }
+
+    fn emit_subroutine(&mut self, subroutine: &SubroutineDeclarationNode) -> Result<VMCode> {
+        // handle variables
+        self.subroutine_table = Some(HashMap::new());
+        let mut cnt = 0;
+        for var in &subroutine.body.variables {
+            cnt = self.handle_var(var, cnt)?;
+        }
+        // handle parameters
+        cnt = 0;
+        for param in &subroutine.parameters {
+            self.subroutine_table.as_mut().unwrap().insert(
+                param.name.0.to_string(),
+                VariableInfo {
+                    r#type: param.r#type.clone(),
+                    segment: Segment::Argument,
+                    index: {
+                        let temp = cnt;
+                        cnt += 1;
+                        temp
+                    },
+                },
+            );
+        }
+        match subroutine.kind {
+            SubroutineKind::Constructor => self.emit_constructor(subroutine),
+            SubroutineKind::Function => self.emit_function(subroutine),
+            SubroutineKind::Method => self.emit_method(subroutine),
+        }
     }
 
     fn emit_term(&self, term: &TermNode) -> Result<VMCode> {

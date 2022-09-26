@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::token::Token;
+use crate::{ast::TypeNode, token::Token};
 
 #[derive(Error, Debug)]
 pub enum ParserError {
@@ -29,5 +29,9 @@ pub enum TokenizerError {
 #[derive(Error, Debug)]
 pub enum EmitterError {
     #[error("not in a subroutine")]
-    NotInASubroutine
+    NotInASubroutine,
+    #[error("variable \"{0}\" not found")]
+    VariableNotFound(String),
+    #[error("unexpected primitive type \"{0:?}\"")]
+    UnexpectedPrimitiveType(TypeNode),
 }

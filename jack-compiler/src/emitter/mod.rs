@@ -206,8 +206,13 @@ pop pointer 0"#
                 }
             } else {
                 // variable not found. pretend it is a type
+                // (function call)
                 r#type = &this.0;
             }
+        } else {
+            // method call
+            arg_len += 1;
+            write!(code, "\npush pointer 0")?;
         }
         for arg in arguments {
             write!(code, "{}", self.emit_expr(arg)?)?;

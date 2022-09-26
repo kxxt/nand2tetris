@@ -113,7 +113,7 @@ impl Emitter {
             .ok_or_else(|| EmitterError::VariableNotFound(name.to_string()).into())
     }
 
-    fn emit_constructor(&self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -143,7 +143,7 @@ pop pointer 0"#
         Ok(code)
     }
 
-    fn emit_function(&self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_function(&mut self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -162,7 +162,7 @@ pop pointer 0"#
         Ok(code)
     }
 
-    fn emit_method(&self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_method(&mut self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -176,10 +176,12 @@ pop pointer 0"#
         let var_cnt = body.variables.len();
         let name = &name.0;
         let class_name = self.class_name.as_deref().unwrap();
-        let mut code = format!(r#"
+        let mut code = format!(
+            r#"
 function {class_name}.{name} {var_cnt}
 push argument 0
-pop pointer 0"#);
+pop pointer 0"#
+        );
         write!(code, "{}", self.emit_statements(&body.statements)?)?;
         Ok(code)
     }
@@ -308,7 +310,7 @@ pop pointer 0"#);
         Ok(code)
     }
 
-    fn emit_return(&mut self, node: &ReturnNode) -> Result<VMCode> {
+    fn emit_return(&self, node: &ReturnNode) -> Result<VMCode> {
         let code = node
             .value
             .as_ref()
@@ -386,8 +388,14 @@ label {label_end}"
         ))
     }
 
-    fn emit_statement(&mut self, statement: StatementNode) -> Result<VMCode> {
-        Ok(todo!())
+    fn emit_statement(&mut self, statement: &StatementNode) -> Result<VMCode> {
+        match statement {
+            StatementNode::IfElse(node) => self.emit_if(node),
+            StatementNode::Do(node) => self.emit_do(node),
+            StatementNode::Let(node) => self.emit_let(node),
+            StatementNode::While(node) => self.emit_while(node),
+            StatementNode::Return(node) => self.emit_return(node),
+        }
     }
 
     fn emit_string(string: String) -> VMCode {
@@ -413,7 +421,8 @@ push temp 5"
         )
     }
 
-    fn emit_statements(&self, statements: &[StatementNode]) -> Result<VMCode> {
-        todo!()
+    fn emit_statements(&mut self, statements: &[StatementNode]) -> Result<VMCode> {
+        let codes: Result<Vec<_>> = statements.iter().map(|s| self.emit_statement(s)).collect();
+        Ok(codes?.join(""))
     }
 }

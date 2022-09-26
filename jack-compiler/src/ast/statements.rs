@@ -7,7 +7,6 @@ pub enum StatementNode {
     Do(DoNode),
     Let(LetNode),
     While(WhileNode),
-    SubroutineCall(SubroutineCallNode),
     Return(ReturnNode),
 }
 

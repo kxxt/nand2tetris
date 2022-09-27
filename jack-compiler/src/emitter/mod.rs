@@ -247,7 +247,21 @@ pop pointer 0"#
                     UnaryOperator::LogicalNegation => "not",
                 }
             ),
-            TermNode::ArrayElement(ArrayElementNode { name, index }) => todo!(),
+            TermNode::ArrayElement(ArrayElementNode { name, index }) => {
+                let VariableInfo {
+                    segment,
+                    index: var_index,
+                    ..
+                } = self.lookup_var(&name.0)?;
+                format!(
+                    r"
+push {segment} {var_index}{}
+add
+pop pointer 1
+push that 0",
+                    self.emit_expr(index)?
+                )
+            }
         })
     }
 
@@ -332,7 +346,23 @@ pop pointer 0"#
             write!(code, "\npop {} {}", segment, index)?;
             Ok(code)
         } else {
-            todo!()
+            let LetNode { name, index, value } = node;
+            let VariableInfo {
+                segment,
+                index: var_index,
+                ..
+            } = self.lookup_var(&name.0)?;
+            let index = self.emit_expr(index.as_ref().unwrap())?;
+            let value = self.emit_expr(value)?;
+            Ok(format!(
+                r"
+push {segment} {var_index}{index}
+add{value}
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0"
+            ))
         }
     }
 

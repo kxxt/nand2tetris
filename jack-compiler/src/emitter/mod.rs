@@ -302,7 +302,7 @@ push that 0",
         let mut code = self.emit_term(&expr.term)?;
         let mut iter = expr.parts.iter();
         while let Some(ExpressionPart { operator, term }) = iter.next() {
-            write!(code, "\n{}\n", self.emit_term(term)?)?;
+            write!(code, "{}\n", self.emit_term(term)?)?;
             code += match operator {
                 BinaryOperator::Plus => "add",
                 BinaryOperator::Minus => "sub",

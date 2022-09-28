@@ -1,0 +1,67 @@
+class Memory {
+    static Array ram;
+    static Array heap;
+    static int freeList;
+
+    function void init() {
+        let ram = 0;
+        let heap = 2048; // base addr of
+        let freeList = 2048; 
+        // first segment of heap
+        let heap[0] = 0; // next
+        let heap[1] = 14335; // len
+        return;
+    }
+
+    function int peek(int addr) {
+        return ram[addr];
+    }
+
+    function void poke(int addr, int value) {
+        let ram[addr] = value;
+        return;
+    }
+
+    // use a linked list to keep track of available heap segments
+
+    function int alloc(int size) {
+        // find a block of size `size` in one of the segments,
+        // remove it from freeList and give it to client
+        // using first-fit heuristics
+        var int p;
+        var int ret;
+        let p = freeList;
+        while (~(p = 0)) {
+            if (ram[p + 1] > (size + 2)) {
+                // we have found an available segment. cheers!
+                let ret = p + ram[p+1] + 2 - size;
+                ram[ret - 1] = size;
+                ram[ret - 2] = 0;
+                ram[p + 1] = ram[p + 1] - size - 2;
+                return ret;
+            } else {
+                // next free segment
+                p = ram[p];
+            }
+        }
+        // todo: error
+    }
+
+    function int deAlloc(int object) {
+        // append segment to freeList
+        var int p;
+        let p = freeList;
+        while ((~(p=0))&(~(ram[p]=0))) {
+            // p != 0 && ram[p] != 0
+            let p = ram[p];
+        }
+        if (p=0) {
+            // freeList = 0
+            let freeList = object - 2;
+        } else {
+            // ram[p] = 0
+            let ram[p] = object - 2;
+        }
+        return;
+    }
+}

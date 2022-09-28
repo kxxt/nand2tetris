@@ -113,13 +113,17 @@ impl Emitter {
             .ok_or_else(|| EmitterError::VariableNotFound(name.to_string()).into())
     }
 
-    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
+    fn emit_constructor(
+        &mut self,
+        ctor: &SubroutineDeclarationNode,
+        var_cnt: u16,
+    ) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
             name,
-            parameters,
             body,
+            ..
         } = ctor;
         // checks
         assert_eq!(kind, &SubroutineKind::Constructor);
@@ -144,11 +148,7 @@ pop pointer 0"#
 
     fn emit_function(&mut self, func: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
         let SubroutineDeclarationNode {
-            kind,
-            return_type,
-            name,
-            parameters,
-            body,
+            kind, name, body, ..
         } = func;
         // checks
         assert_eq!(kind, &SubroutineKind::Function);
@@ -162,16 +162,11 @@ pop pointer 0"#
 
     fn emit_method(&mut self, func: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
         let SubroutineDeclarationNode {
-            kind,
-            return_type,
-            name,
-            parameters,
-            body,
+            kind, name, body, ..
         } = func;
         // checks
         assert_eq!(kind, &SubroutineKind::Method);
         // format VMCode
-        let var_cnt = body.variables.len();
         let name = &name.0;
         let class_name = self.class_name.as_deref().unwrap();
         let mut code = format!(
@@ -222,9 +217,8 @@ pop pointer 0"#
                 format!(
                     "\n{}",
                     match v {
-                        KeywordConstant::False => "false",
-                        KeywordConstant::True => "true",
-                        KeywordConstant::Null => "push constant 0",
+                        KeywordConstant::False | KeywordConstant::Null => "push constant 0",
+                        KeywordConstant::True => "push constant 0\nnot",
                         KeywordConstant::This => "push pointer 0",
                     }
                 )

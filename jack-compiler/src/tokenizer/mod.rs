@@ -1,7 +1,6 @@
 mod test;
 mod token_stream;
 
-
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -18,7 +17,10 @@ pub struct Tokenizer;
 
 macro_rules! tokenize_keyword_arm {
     ($data:ident, $len: expr, $($l:literal),+) => {
-        if $($data.starts_with($l))||+ {
+        if match $data.chars().skip($len).next() {
+            Some(c) => !c.is_ascii_alphabetic(),
+            None => true
+        } && ($($data.starts_with($l))||+) {
             return Ok(
                 (Token {
                     kind: TokenKind::Keyword,

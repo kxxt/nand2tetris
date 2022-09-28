@@ -46,13 +46,13 @@ impl Emitter {
     fn advance_static_counter(&mut self) -> u16 {
         let temp = self.static_counter;
         self.static_counter += 1;
-        self.static_counter
+        temp
     }
 
     fn advance_field_counter(&mut self) -> u16 {
         let temp = self.field_counter;
         self.field_counter += 1;
-        self.field_counter
+        temp
     }
 
     fn next_label(&mut self) -> String {
@@ -113,7 +113,7 @@ impl Emitter {
             .ok_or_else(|| EmitterError::VariableNotFound(name.to_string()).into())
     }
 
-    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_constructor(&mut self, ctor: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -130,12 +130,11 @@ impl Emitter {
         }
         // format VMCode
         let name = &name.0;
-        let var_cnt = body.variables.len();
         let fields_cnt = self.field_counter;
         let mut code = format!(
             r#"
 function {class_name}.{name} {var_cnt}
-push constant {fields_cnt}"
+push constant {fields_cnt}
 call Memory.alloc 1
 pop pointer 0"#
         );
@@ -143,7 +142,7 @@ pop pointer 0"#
         Ok(code)
     }
 
-    fn emit_function(&mut self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_function(&mut self, func: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -154,7 +153,6 @@ pop pointer 0"#
         // checks
         assert_eq!(kind, &SubroutineKind::Function);
         // format VMCode
-        let var_cnt = body.variables.len();
         let name = &name.0;
         let class_name = self.class_name.as_deref().unwrap();
         let mut code = format!("\nfunction {class_name}.{name} {var_cnt}");
@@ -162,7 +160,7 @@ pop pointer 0"#
         Ok(code)
     }
 
-    fn emit_method(&mut self, func: &SubroutineDeclarationNode) -> Result<VMCode> {
+    fn emit_method(&mut self, func: &SubroutineDeclarationNode, var_cnt: u16) -> Result<VMCode> {
         let SubroutineDeclarationNode {
             kind,
             return_type,
@@ -194,7 +192,7 @@ pop pointer 0"#
             cnt = self.handle_var(var, cnt)?;
         }
         // handle parameters
-        cnt = 0;
+        let mut param_cnt = 0;
         for param in &subroutine.parameters {
             self.subroutine_table.as_mut().unwrap().insert(
                 param.name.0.to_string(),
@@ -202,32 +200,32 @@ pop pointer 0"#
                     r#type: param.r#type.clone(),
                     segment: Segment::Argument,
                     index: {
-                        let temp = cnt;
-                        cnt += 1;
+                        let temp = param_cnt;
+                        param_cnt += 1;
                         temp
                     },
                 },
             );
         }
         match subroutine.kind {
-            SubroutineKind::Constructor => self.emit_constructor(subroutine),
-            SubroutineKind::Function => self.emit_function(subroutine),
-            SubroutineKind::Method => self.emit_method(subroutine),
+            SubroutineKind::Constructor => self.emit_constructor(subroutine, cnt),
+            SubroutineKind::Function => self.emit_function(subroutine, cnt),
+            SubroutineKind::Method => self.emit_method(subroutine, cnt),
         }
     }
 
     fn emit_term(&self, term: &TermNode) -> Result<VMCode> {
         Ok(match term {
-            TermNode::IntegerConstant(i) => format!("\npush {i}"),
+            TermNode::IntegerConstant(i) => format!("\npush constant {i}"),
             TermNode::StringConstant(s) => Self::emit_string(s.to_string()),
             TermNode::KeywordConstant(v) => {
                 format!(
-                    "\npush {}",
+                    "\n{}",
                     match v {
                         KeywordConstant::False => "false",
                         KeywordConstant::True => "true",
-                        KeywordConstant::Null => "constant 0",
-                        KeywordConstant::This => "pointer 0",
+                        KeywordConstant::Null => "push constant 0",
+                        KeywordConstant::This => "push pointer 0",
                     }
                 )
             }
@@ -429,6 +427,7 @@ label {label_end}"
     }
 
     fn emit_string(string: String) -> VMCode {
+        let len = string.len();
         let push_chars: String = string
             .chars()
             .map(|x| {
@@ -444,9 +443,9 @@ pop temp 3",
             .collect();
         format!(
             r"
-call String.new 0
-pop temp 5
-{push_chars}
+push constant {len}
+call String.new 1
+pop temp 5{push_chars}
 push temp 5"
         )
     }

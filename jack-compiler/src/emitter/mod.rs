@@ -15,7 +15,6 @@ pub struct Emitter {
     field_counter: u16,
     label_counter: u16,
     subroutine_table: Option<HashMap<String, VariableInfo>>,
-    subroutines: HashMap<String, SubroutineKind>,
 }
 
 impl Emitter {
@@ -26,7 +25,6 @@ impl Emitter {
             field_counter: 0,
             label_counter: 0,
             subroutine_table: None,
-            subroutines: HashMap::new(),
             class_name: None,
         }
     }
@@ -333,11 +331,7 @@ push that 0",
     fn emit_let(&self, node: &LetNode) -> Result<VMCode> {
         let LetNode { name, index, value } = node;
         if index.is_none() {
-            let VariableInfo {
-                r#type,
-                segment,
-                index,
-            } = self.lookup_var(&name.0)?;
+            let VariableInfo { segment, index, .. } = self.lookup_var(&name.0)?;
             let mut code = self.emit_expr(value)?;
             write!(code, "\npop {} {}", segment, index)?;
             Ok(code)

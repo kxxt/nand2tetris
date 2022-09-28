@@ -42,12 +42,9 @@ impl Tokenizer {
         }
         let Source {
             content: source,
-            name,
+            name: _,
         } = source;
-        TokenStream::new(
-            REMOVE_COMMENTS_AND_LONG_SPACES.replace_all(&source, " "),
-            &name,
-        )
+        TokenStream::new(REMOVE_COMMENTS_AND_LONG_SPACES.replace_all(&source, " "))
     }
 
     fn tokenize_keyword(data: &str) -> TokenizationResult {

@@ -3,23 +3,17 @@ use std::borrow::Cow;
 
 pub struct TokenStream<'a> {
     pub(super) source: Cow<'a, str>,
-    pub(super) source_name: &'a str,
     pub(super) offset: usize,
 }
 
 pub type TokenResult = Result<Token, TokenizerError>;
 
 impl<'a> TokenStream<'a> {
-    pub fn new(source: Cow<'a, str>, source_name: &'a str) -> Self {
+    pub fn new(source: Cow<'a, str>) -> Self {
         Self {
             source,
-            source_name,
             offset: 0,
         }
-    }
-
-    pub fn source_name(&self) -> &str {
-        &self.source_name
     }
 
     fn eat_whitespace(&mut self) {

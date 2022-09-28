@@ -59,13 +59,16 @@ impl Display for TokenKind {
     }
 }
 
-macro_rules! token {
-    ($kind:ident, $value:expr) => {
-        Token {
-            kind: TokenKind::$kind,
-            value: $value.to_owned(),
-        }
-    };
-}
+#[cfg(test)]
+pub(super) mod builder {
+    macro_rules! token {
+        ($kind:ident, $value:expr) => {
+            Token {
+                kind: TokenKind::$kind,
+                value: $value.to_owned(),
+            }
+        };
+    }
 
-pub(crate) use token;
+    pub(crate) use token;
+}

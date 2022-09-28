@@ -1,9 +1,6 @@
 use anyhow::anyhow;
 use phf::phf_map;
-use std::{
-    fmt::{write, Display},
-    str::FromStr,
-};
+use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Segment {

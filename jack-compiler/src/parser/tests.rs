@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::{
-    parser::macros::*,
+    parser::macros::builder::*,
     tokenizer::{Source, Tokenizer},
 };
 use pretty_assertions::assert_eq;

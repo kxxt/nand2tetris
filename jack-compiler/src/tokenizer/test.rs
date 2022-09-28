@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use crate::token::token;
+use crate::token::builder::token;
 
 macro_rules! test_tokenizer {
     ($name:ident, $source:expr, $output:expr) => {

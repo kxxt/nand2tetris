@@ -8,7 +8,7 @@ mod parser;
 mod token;
 mod tokenizer;
 
-use std::{fs, path::PathBuf, string::ParseError};
+use std::{fs, path::PathBuf};
 
 use anyhow::Result;
 use clap::Parser;

@@ -6,25 +6,27 @@ macro_rules! unexpected_token {
 
 pub(super) use unexpected_token;
 
-macro_rules! n_class {
-    ($name:expr) => {
-        n_class!($name, vec![], vec![])
-    };
-    ($name:expr, $subroutines:expr) => {
-        n_class!($name, $subroutines, vec![])
-    };
-    ($name:expr, $subroutines:expr, $variables: expr) => {
-        ClassNode {
-            name: $name.to_string().into(),
-            variables: $variables,
-            subroutines: $subroutines,
-        }
-    };
-}
+#[cfg(test)]
+pub(super) mod builder {
+    macro_rules! n_class {
+        ($name:expr) => {
+            n_class!($name, vec![], vec![])
+        };
+        ($name:expr, $subroutines:expr) => {
+            n_class!($name, $subroutines, vec![])
+        };
+        ($name:expr, $subroutines:expr, $variables: expr) => {
+            ClassNode {
+                name: $name.to_string().into(),
+                variables: $variables,
+                subroutines: $subroutines,
+            }
+        };
+    }
 
-pub(super) use n_class;
+    pub(crate) use n_class;
 
-macro_rules! n_class_vars {
+    macro_rules! n_class_vars {
     ($($kind:ident $type:ident $($val:ident),+);* $(;)?) => {
         vec![
            $(ClassVariableDeclarationNode {
@@ -39,26 +41,26 @@ macro_rules! n_class_vars {
         ]
     };
 }
-pub(super) use n_class_vars;
+    pub(crate) use n_class_vars;
 
-macro_rules! n_type {
-    (int) => {
-        TypeNode::Int
-    };
-    (char) => {
-        TypeNode::Char
-    };
-    (boolean) => {
-        TypeNode::Boolean
-    };
-    ($t:ident) => {
-        TypeNode::Class(stringify!($t).to_string().into())
-    };
-}
+    macro_rules! n_type {
+        (int) => {
+            TypeNode::Int
+        };
+        (char) => {
+            TypeNode::Char
+        };
+        (boolean) => {
+            TypeNode::Boolean
+        };
+        ($t:ident) => {
+            TypeNode::Class(stringify!($t).to_string().into())
+        };
+    }
 
-pub(super) use n_type;
+    pub(crate) use n_type;
 
-macro_rules! n_vars {
+    macro_rules! n_vars {
     ($($type:ident $($val:ident),+;)*) => {
         vec![
             $(VariableDeclarationNode {
@@ -71,52 +73,52 @@ macro_rules! n_vars {
     };
 }
 
-pub(super) use n_vars;
+    pub(crate) use n_vars;
 
-macro_rules! n_expr {
-    ($e:expr) => {
-        ExpressionNode {
-            term: Box::new($e),
-            parts: vec![],
-        }
-    };
-}
+    macro_rules! n_expr {
+        ($e:expr) => {
+            ExpressionNode {
+                term: Box::new($e),
+                parts: vec![],
+            }
+        };
+    }
 
-pub(super) use n_expr;
+    pub(crate) use n_expr;
 
-macro_rules! n_string {
-    ($e:expr) => {
-        n_expr!(n_string_t!($e))
-    };
-}
+    macro_rules! n_string {
+        ($e:expr) => {
+            n_expr!(n_string_t!($e))
+        };
+    }
 
-pub(super) use n_string;
+    pub(crate) use n_string;
 
-macro_rules! n_string_t {
-    ($e:expr) => {
-        TermNode::StringConstant($e.to_string())
-    };
-}
+    macro_rules! n_string_t {
+        ($e:expr) => {
+            TermNode::StringConstant($e.to_string())
+        };
+    }
 
-pub(super) use n_string_t;
+    pub(crate) use n_string_t;
 
-macro_rules! n_int {
-    ($e:expr) => {
-        n_expr!(n_int_t!($e))
-    };
-}
+    macro_rules! n_int {
+        ($e:expr) => {
+            n_expr!(n_int_t!($e))
+        };
+    }
 
-pub(super) use n_int;
+    pub(crate) use n_int;
 
-macro_rules! n_int_t {
-    ($e:expr) => {
-        TermNode::IntegerConstant($e as u16)
-    };
-}
+    macro_rules! n_int_t {
+        ($e:expr) => {
+            TermNode::IntegerConstant($e as u16)
+        };
+    }
 
-pub(super) use n_int_t;
+    pub(crate) use n_int_t;
 
-macro_rules! n_t {
+    macro_rules! n_t {
     (this) => {
         KeywordConstant::This.into()
     };
@@ -169,31 +171,31 @@ macro_rules! n_t {
     };
 }
 
-pub(super) use n_t;
+    pub(crate) use n_t;
 
-macro_rules! n_e {
+    macro_rules! n_e {
     ($($t:tt)*) => {
         n_expr!(n_t!($($t)*))
     }
 }
 
-pub(super) use n_e;
+    pub(crate) use n_e;
 
-macro_rules! n_binop {
-    ($a:expr, $b:ident, $c:expr) => {
-        ExpressionNode {
-            term: Box::new($a),
-            parts: vec![ExpressionPart {
-                operator: BinaryOperator::$b,
-                term: Box::new($c),
-            }],
-        }
-    };
-}
+    macro_rules! n_binop {
+        ($a:expr, $b:ident, $c:expr) => {
+            ExpressionNode {
+                term: Box::new($a),
+                parts: vec![ExpressionPart {
+                    operator: BinaryOperator::$b,
+                    term: Box::new($c),
+                }],
+            }
+        };
+    }
 
-pub(super) use n_binop;
+    pub(crate) use n_binop;
 
-macro_rules! n_statements {
+    macro_rules! n_statements {
     (@cmd {let $name:ident = $e:expr}) => {
         LetNode {
             name: stringify!($name).to_string().into(),
@@ -253,9 +255,9 @@ macro_rules! n_statements {
     }
 }
 
-pub(super) use n_statements;
+    pub(crate) use n_statements;
 
-macro_rules! n_subroutine {
+    macro_rules! n_subroutine {
     (@ret_type int) => {
         Some(TypeNode::Int)
     };
@@ -303,4 +305,5 @@ macro_rules! n_subroutine {
     };
 }
 
-pub(super) use n_subroutine;
+    pub(crate) use n_subroutine;
+}

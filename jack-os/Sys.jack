@@ -1,0 +1,27 @@
+class Sys {
+    function void wait(int ms) {
+        while (ms > 0) {
+            let ms = ms - 1;
+            // Do something to wait 1 ms?
+            do Memory.peek(0);
+        }
+        return;
+    }
+
+    function void halt() {
+        while(true) {
+
+        }
+        return;
+    }
+
+    function void init() {
+        do Memory.init();
+        do Math.init();
+        do Output.init();
+        do Keyboard.init();
+        do Screen.init();
+        do Main.main();
+        return;
+    }
+}

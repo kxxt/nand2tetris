@@ -1,9 +1,14 @@
 class Sys {
     function void wait(int ms) {
+        var int a;
         while (ms > 0) {
             let ms = ms - 1;
             // Do something to wait 1 ms?
-            do Memory.peek(0);
+            let a = 40;
+            while (a > 0) {
+                do Memory.peek(0);
+                let a = a - 1;
+            }
         }
         return;
     }
@@ -22,6 +27,7 @@ class Sys {
         do Keyboard.init();
         do Screen.init();
         do Main.main();
+        do halt();
         return;
     }
 }

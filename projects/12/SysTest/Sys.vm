@@ -1,0 +1,61 @@
+
+function Sys.wait 1
+label Sys.LABEL.0
+push argument 0
+push constant 0
+gt
+not
+if-goto Sys.LABEL.1
+push argument 0
+push constant 1
+sub
+pop argument 0
+push constant 40
+pop local 0
+label Sys.LABEL.2
+push local 0
+push constant 0
+gt
+not
+if-goto Sys.LABEL.3
+push constant 0
+call Memory.peek 1
+pop temp 3
+push local 0
+push constant 1
+sub
+pop local 0
+goto Sys.LABEL.2
+label Sys.LABEL.3
+goto Sys.LABEL.0
+label Sys.LABEL.1
+push constant 0
+return
+function Sys.halt 0
+label Sys.LABEL.4
+push constant 0
+not
+not
+if-goto Sys.LABEL.5
+goto Sys.LABEL.4
+label Sys.LABEL.5
+push constant 0
+return
+function Sys.init 0
+call Memory.init 0
+pop temp 3
+call Math.init 0
+pop temp 3
+call Output.init 0
+pop temp 3
+call Keyboard.init 0
+pop temp 3
+call Screen.init 0
+pop temp 3
+call Main.main 0
+pop temp 3
+push pointer 0
+call Sys.halt 1
+pop temp 3
+push constant 0
+return

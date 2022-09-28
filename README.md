@@ -14,10 +14,15 @@ The assembler and VM translator are written in Rust.
 
 - `assembler`: The assembler for Hack Assembly language.
 - `jack-vm-translator`: VM Translator.
-- `jack-compiler`: (WIP) Compiler for Jack language.
-- `projects`, `tools`: Homework
+- `jack-compiler`: Compiler for Jack language.
+- `particle-system`: Project 9.
+- `projects`, `tools`: Other homework.
 
 ## Notice
 
 For other students of nand2tetris, DO NOT copy my code. Simply copying and pasting my code won't do any good to you.
 You should DIY to make sure that you truly understands the courses.
+
+## Highlights
+
+- The VM translator, compiler and assembler are all written in rust.

@@ -187,7 +187,11 @@ pop pointer 0"#
             cnt = self.handle_var(var, cnt)?;
         }
         // handle parameters
-        let mut param_cnt = 0;
+        let mut param_cnt = if subroutine.kind == SubroutineKind::Method {
+            1
+        } else {
+            0
+        };
         for param in &subroutine.parameters {
             self.subroutine_table.as_mut().unwrap().insert(
                 param.name.0.to_string(),
@@ -322,7 +326,7 @@ push that 0",
             .as_ref()
             .map(|expr| self.emit_expr(&expr))
             .transpose()?
-            .unwrap_or(String::new());
+            .unwrap_or("\npush constant 0".to_string());
         Ok(format!("{code}\nreturn"))
     }
 

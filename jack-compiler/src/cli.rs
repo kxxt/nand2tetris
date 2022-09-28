@@ -9,18 +9,18 @@ use crate::tokenizer::Source;
 
 #[derive(CmdlineParser, Debug)]
 #[clap(author="kxxt", version, about="Jack compiler for nand2tetris course", long_about = None)]
-struct Args {
+pub struct Args {
     /// input file or folder
     #[clap(value_parser)]
-    input: String,
+    pub input: String,
 
     /// output file or folder
     #[clap(short, long, value_parser)]
-    output: Option<String>,
+    pub output: Option<String>,
 }
 
 impl Args {
-    fn get_inputs(&self) -> Result<Vec<Source>, io::Error> {
+    pub fn get_inputs(&self) -> Result<Vec<Source>, io::Error> {
         let input = Path::new(&self.input);
         let files = if input.is_dir() {
             fs::read_dir(input)?

@@ -1,0 +1,188 @@
+
+function Memory.init 0
+push constant 0
+pop static 0
+push constant 2048
+pop static 1
+push constant 2048
+pop static 2
+push static 1
+push constant 0
+add
+push constant 0
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push static 1
+push constant 1
+add
+push constant 14335
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push constant 0
+return
+function Memory.peek 0
+push static 0
+push argument 0
+add
+pop pointer 1
+push that 0
+return
+function Memory.poke 0
+push static 0
+push argument 0
+add
+push argument 1
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push constant 0
+return
+function Memory.alloc 2
+push static 2
+pop local 0
+label Memory.LABEL.0
+
+push local 0
+push constant 0
+eq
+not
+not
+if-goto Memory.LABEL.1
+push static 0
+push local 0
+push constant 1
+add
+add
+pop pointer 1
+push that 0
+push argument 0
+push constant 2
+add
+gt
+not
+if-goto Memory.LABEL.2
+push local 0
+push static 0
+push local 0
+push constant 1
+add
+add
+pop pointer 1
+push that 0
+add
+push constant 2
+add
+push argument 0
+sub
+pop local 1
+push static 0
+push local 1
+push constant 1
+sub
+add
+push argument 0
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push static 0
+push local 1
+push constant 2
+sub
+add
+push constant 0
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push static 0
+push local 0
+push constant 1
+add
+add
+push static 0
+push local 0
+push constant 1
+add
+add
+pop pointer 1
+push that 0
+push argument 0
+sub
+push constant 2
+sub
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+push local 1
+return
+goto Memory.LABEL.3
+label Memory.LABEL.2
+push static 0
+push local 0
+add
+pop pointer 1
+push that 0
+pop local 0
+label Memory.LABEL.3
+goto Memory.LABEL.0
+label Memory.LABEL.1
+function Memory.deAlloc 1
+push static 2
+pop local 0
+label Memory.LABEL.4
+
+push local 0
+push constant 0
+eq
+not
+
+push static 0
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 0
+eq
+not
+and
+not
+if-goto Memory.LABEL.5
+push static 0
+push local 0
+add
+pop pointer 1
+push that 0
+pop local 0
+goto Memory.LABEL.4
+label Memory.LABEL.5
+push local 0
+push constant 0
+eq
+not
+if-goto Memory.LABEL.6
+push argument 0
+push constant 2
+sub
+pop static 2
+goto Memory.LABEL.7
+label Memory.LABEL.6
+push static 0
+push local 0
+add
+push argument 0
+push constant 2
+sub
+pop temp 4
+pop pointer 1
+push temp 4
+pop that 0
+label Memory.LABEL.7
+push constant 0
+return
